@@ -1,10 +1,40 @@
 import random
+import time
 import pandas as pd
 import streamlit as st
 
 # Page Configuration
 st.set_page_config(
     page_title="Superflex Draft Assistant Pro", page_icon="🏈", layout="wide"
+)
+
+# Custom CSS for Position Color Coding & Visual Polish
+st.markdown(
+    """
+    <style>
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #1e293b;
+        border-radius: 6px;
+        color: #f8fafc;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
+    
+    /* Position Badge Styles */
+    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #3b82f6; }
+    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #10b981; }
+    .badge-wr { background-color: #78350f; color: #fde68a; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #f59e0b; }
+    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #a855f7; }
+    </style>
+""",
+    unsafe_allow_html=True,
 )
 
 # Initialize Session State
@@ -28,24 +58,43 @@ if "roster" not in st.session_state:
 if "auto_draft_history" not in st.session_state:
     st.session_state.auto_draft_history = []
 
-# Sidebar Customizations & Auto-Draft Toggle
+# Sidebar League Settings
 st.sidebar.header("⚙️ League Settings")
 team_name = st.sidebar.text_input("Your Team Name", "Gridiron Greats")
-draft_position = st.sidebar.selectbox(
-    "Select Your Draft Slot",
-    [f"Round 1, Pick {i}" for i in range(1, 11)] + ["Custom Late/Middle"],
+league_size = 10  # Standard 10-team league
+
+draft_slot_options = [f"Pick {i}" for i in range(1, league_size + 1)]
+selected_slot_str = st.sidebar.selectbox(
+    "Select Your Draft Slot", draft_slot_options
 )
+user_draft_slot = int(selected_slot_str.replace("Pick ", ""))
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🤖 Simulation Control")
+st.sidebar.subheader("🤖 Simulation & Auto-Draft")
 auto_draft_enabled = st.sidebar.toggle(
-    "Enable Auto-Draft for Other Teams",
+    "Enable Auto-Draft Automation",
     value=False,
-    help="When turned on, drafting your player will automatically trigger AI picks for the other league slots from the top available board.",
+    help="When turned on, the app automatically runs simulated picks for opposing teams round-by-round.",
+)
+auto_speed = st.sidebar.slider(
+    "Auto-Draft Speed (seconds)", 0.5, 3.0, 1.0, 0.5
 )
 
 
-# Comprehensive 150-Player Database based on Superflex Rankings
+# Helper for badge rendering
+def get_position_badge(pos):
+    if pos == "QB":
+        return '<span class="badge-qb">QB</span>'
+    elif pos == "RB":
+        return '<span class="badge-rb">RB</span>'
+    elif pos == "WR":
+        return '<span class="badge-wr">WR</span>'
+    elif pos == "TE":
+        return '<span class="badge-te">TE</span>'
+    return f"<span>{pos}</span>"
+
+
+# Comprehensive 150-Player Database
 @st.cache_data
 def load_150_players():
     base_players = [
@@ -252,35 +301,96 @@ df_players = load_150_players()
 
 # App Header
 st.title(f"🏈 Superflex Draft Assistant: {team_name}")
-st.markdown(
-    f"**Draft Slot:** `{draft_position}` | **Auto-Draft Status:** `{'🟢 ON' if auto_draft_enabled else '🔴 OFF'}`"
+
+
+# Snake draft calculation
+def get_current_picker(pick_num, user_slot, num_teams):
+    round_num = (pick_num - 1) // num_teams + 1
+    pos_in_round = (pick_num - 1) % num_teams + 1
+
+    if round_num % 2 == 1:
+        picking_team_slot = pos_in_round
+    else:
+        picking_team_slot = num_teams - pos_in_round + 1
+
+    is_user = picking_team_slot == user_slot
+    return round_num, picking_team_slot, is_user
+
+
+current_pick = len(st.session_state.drafted_ids) + 1
+round_n, current_slot, is_user_turn = get_current_picker(
+    current_pick, user_draft_slot, league_size
 )
+
+# Top Status Indicator Bar
+status_col1, status_col2, status_col3 = st.columns(3)
+status_col1.metric("Current Overall Pick", f"#{current_pick}")
+status_col2.metric("Draft Round", f"Round {round_n}")
+
+if is_user_turn:
+    status_col3.markdown(
+        f"### 🟢 **YOUR TURN!** (Pick {user_draft_slot})"
+    )
+else:
+    status_col3.markdown(
+        f"### ⏳ **AI Picking:** Team Slot {current_slot}"
+    )
+
 st.markdown("---")
 
-# Sidebar view navigation
-st.sidebar.markdown("---")
-view_mode = st.sidebar.radio(
-    "Select View Mode",
-    [
-        "Draft Room (Main)",
-        "Full Draft Board",
-        "My Roster & Bye Analyzer",
-        "AI / Auto-Draft Log",
-    ],
-)
-
-total_drafted = len(st.session_state.drafted_ids)
-st.sidebar.progress(
-    total_drafted / 150, text=f"Draft Pool Progress: {total_drafted}/150 Picked"
+# --- MAIN SCREEN TABS ---
+tab_draft, tab_board, tab_roster, tab_log = st.tabs(
+    ["🎯 Draft Room", "🏟️ Full Draft Board", "📋 My Roster", "🤖 AI Auto-Draft Log"]
 )
 
 
-# --- VIEW 1: DRAFT ROOM ---
-if view_mode == "Draft Room (Main)":
+def draft_player(p_obj, is_user_pick=True):
+    st.session_state.drafted_ids.add(p_obj["id"])
+    if p_obj["id"] in st.session_state.queue_ids:
+        st.session_state.queue_ids.remove(p_obj["id"])
+
+    if is_user_pick:
+        r = st.session_state.roster
+        if p_obj["pos"] == "QB" and len(r["QB"]) < 1:
+            r["QB"].append(p_obj)
+        elif p_obj["pos"] == "RB" and len(r["RB"]) < 2:
+            r["RB"].append(p_obj)
+        elif p_obj["pos"] == "WR" and len(r["WR"]) < 2:
+            r["WR"].append(p_obj)
+        elif p_obj["pos"] == "TE" and len(r["TE"]) < 1:
+            r["TE"].append(p_obj)
+        elif p_obj["pos"] == "QB" and len(r["SUPERFLEX"]) < 1:
+            r["SUPERFLEX"].append(p_obj)
+        elif p_obj["pos"] in ["RB", "WR", "TE"] and len(r["FLEX"]) < 1:
+            r["FLEX"].append(p_obj)
+        elif len(r["SUPERFLEX"]) < 1:
+            r["SUPERFLEX"].append(p_obj)
+        else:
+            r["BN"].append(p_obj)
+    else:
+        st.session_state.auto_draft_history.append(
+            f"Round {round_n} (Pick {current_pick}) - AI Team {current_slot} drafted: **{p_obj['name']}** ({p_obj['pos']} - {p_obj['team']})"
+        )
+
+
+# --- AUTO-DRAFT AUTOMATION LOOP ---
+if auto_draft_enabled and not is_user_turn and current_pick <= 150:
+    available_pool = df_players[
+        ~df_players["id"].isin(st.session_state.drafted_ids)
+    ]
+    if not available_pool.empty:
+        best_available = available_pool.iloc[0].to_dict()
+        draft_player(best_available, is_user_pick=False)
+        time.sleep(auto_speed)
+        st.rerun()
+
+
+# --- TAB 1: DRAFT ROOM ---
+with tab_draft:
     col_left, col_right = st.columns([2, 1])
 
     with col_right:
-        st.subheader("💡 FantasyPros-Inspired Expert Tip Box")
+        st.subheader("💡 FantasyPros Expert Tip Box")
 
         qbs_total = len(st.session_state.roster["QB"]) + len(
             st.session_state.roster["SUPERFLEX"]
@@ -294,29 +404,27 @@ if view_mode == "Draft Room (Main)":
 
         if qbs_total >= 2:
             strengths.append(
-                "🟢 **QB Depth:** Secured 2+ starting signal callers, maximizing Superflex positional value."
+                "🟢 **QB Depth:** Secured 2+ starting signal callers for Superflex."
             )
         else:
             weaknesses.append(
-                "🔴 **QB Scarcity:** Superflex format demands swift QB building; target passers before tier drop-off."
+                "🔴 **QB Scarcity Warning:** Superflex requires solid starting QB depth early."
             )
 
         if rbs_total + wrs_total >= 4:
-            strengths.append(
-                "🟢 **Skill-Player Floor:** Strong baseline volume established at RB/WR."
-            )
+            strengths.append("🟢 **Skill Floor:** Solid depth at RB/WR.")
         else:
             weaknesses.append(
-                "🔴 **Flex Vulnerability:** Build more depth across standard flex options."
+                "🔴 **Flex Vulnerability:** Target high-volume starters for flex."
             )
 
         if tes_total > 0:
             strengths.append(
-                "🟢 **TE Starter Locked:** Stable weekly production locked in."
+                "🟢 **TE Locked:** Reliable weekly starter secured."
             )
         else:
             weaknesses.append(
-                "🟡 **TE Value Watch:** Monitor tier breaks for high-end upside."
+                "🟡 **TE Value Watch:** Keep an eye on elite difference-makers like Brock Bowers or Trey McBride."
             )
 
         with st.expander("📊 Live Roster Strengths & Weaknesses", expanded=True):
@@ -326,7 +434,7 @@ if view_mode == "Draft Room (Main)":
                     st.markdown(s)
             else:
                 st.caption(
-                    "Draft more players to establish positional strengths."
+                    "Draft more players to build positional strengths."
                 )
 
             st.markdown("**Weaknesses & Areas to Target:**")
@@ -347,7 +455,11 @@ if view_mode == "Draft Room (Main)":
             ]
             for _, qrow in queued_df.iterrows():
                 qc1, qc2 = st.columns([3, 1])
-                qc1.text(f"{qrow['name']} ({qrow['pos']}-{qrow['team']})")
+                pos_badge = get_position_badge(qrow["pos"])
+                qc1.markdown(
+                    f"{pos_badge} **{qrow['name']}** ({qrow['team']})",
+                    unsafe_allow_html=True,
+                )
                 if qc2.button("Remove", key=f"unq_{qrow['id']}"):
                     st.session_state.queue_ids.remove(qrow["id"])
                     st.rerun()
@@ -377,11 +489,21 @@ if view_mode == "Draft Room (Main)":
             ]
 
         for _, row in filtered.head(30).iterrows():
-            rc1, rc2, rc3, rc4, rc5, rc6 = st.columns([1, 3, 1, 1, 1, 1])
-            rc1.write(f"#{row['id']}")
+            rc1, rc2, rc3, rc4, rc5, rc6 = st.columns(
+                [0.8, 2.5, 1, 1.2, 1.2, 1.2]
+            )
+            rc1.markdown(
+                f"<span style='color: #94a3b8; font-weight:600;'>#{row['id']}</span>",
+                unsafe_allow_html=True,
+            )
             rc2.markdown(f"**{row['name']}**")
-            rc3.code(row["pos"])
-            rc4.text(row["team"])
+            rc3.markdown(
+                get_position_badge(row["pos"]), unsafe_allow_html=True
+            )
+            rc4.markdown(
+                f"<span style='color: #cbd5e1;'>{row['team']} (Bye {row['bye']})</span>",
+                unsafe_allow_html=True,
+            )
 
             in_q = row["id"] in st.session_state.queue_ids
             if rc5.button(
@@ -394,52 +516,12 @@ if view_mode == "Draft Room (Main)":
                 st.rerun()
 
             if rc6.button("Draft", key=f"d_{row['id']}"):
-                p_obj = row.to_dict()
-                st.session_state.drafted_ids.add(row["id"])
-                if row["id"] in st.session_state.queue_ids:
-                    st.session_state.queue_ids.remove(row["id"])
-
-                # Roster Routing
-                r = st.session_state.roster
-                if p_obj["pos"] == "QB" and len(r["QB"]) < 1:
-                    r["QB"].append(p_obj)
-                elif p_obj["pos"] == "RB" and len(r["RB"]) < 2:
-                    r["RB"].append(p_obj)
-                elif p_obj["pos"] == "WR" and len(r["WR"]) < 2:
-                    r["WR"].append(p_obj)
-                elif p_obj["pos"] == "TE" and len(r["TE"]) < 1:
-                    r["TE"].append(p_obj)
-                elif p_obj["pos"] == "QB" and len(r["SUPERFLEX"]) < 1:
-                    r["SUPERFLEX"].append(p_obj)
-                elif (
-                    p_obj["pos"] in ["RB", "WR", "TE"] and len(r["FLEX"]) < 1
-                ):
-                    r["FLEX"].append(p_obj)
-                elif len(r["SUPERFLEX"]) < 1:
-                    r["SUPERFLEX"].append(p_obj)
-                else:
-                    r["BN"].append(p_obj)
-
-                # AUTO-DRAFT SIMULATION LOGIC FOR OTHER TEAMS
-                if auto_draft_enabled:
-                    # Simulate 3 other league picks per user turn to keep pace
-                    available_pool = df_players[
-                        ~df_players["id"].isin(st.session_state.drafted_ids)
-                    ]
-                    num_simulated_picks = min(3, len(available_pool))
-                    sim_picks = available_pool.head(num_simulated_picks)
-
-                    for _, sim_row in sim_picks.iterrows():
-                        st.session_state.drafted_ids.add(sim_row["id"])
-                        st.session_state.auto_draft_history.append(
-                            f"🤖 AI Team drafted: **{sim_row['name']}** ({sim_row['pos']} - {sim_row['team']})"
-                        )
-
+                draft_player(row.to_dict(), is_user_pick=True)
                 st.rerun()
 
 
-# --- VIEW 2: FULL DRAFT BOARD ---
-elif view_mode == "Full Draft Board":
+# --- TAB 2: FULL DRAFT BOARD ---
+with tab_board:
     st.subheader("🏟️ Comprehensive 150-Player Draft Board")
     cols_per_row = 5
     all_rows = df_players.to_dict("records")
@@ -450,25 +532,41 @@ elif view_mode == "Full Draft Board":
             if i + idx < len(all_rows):
                 p = all_rows[i + idx]
                 is_drafted = p["id"] in st.session_state.drafted_ids
-                status_color = (
-                    "background-color: #334155; color: #94a3b8;"
-                    if is_drafted
-                    else "background-color: #1e293b; border: 1px solid #3b82f6;"
-                )
+
+                # Position-specific card styling for aesthetic contrast
+                if is_drafted:
+                    card_style = "background-color: #0f172a; color: #475569; border: 1px solid #1e293b;"
+                    status_text = "❌ DRAFTED"
+                else:
+                    if p["pos"] == "QB":
+                        card_style = "background-color: #0f172a; border: 1px solid #1e3a8a; color: #f8fafc;"
+                    elif p["pos"] == "RB":
+                        card_style = "background-color: #0f172a; border: 1px solid #064e3b; color: #f8fafc;"
+                    elif p["pos"] == "WR":
+                        card_style = "background-color: #0f172a; border: 1px solid #78350f; color: #f8fafc;"
+                    else:  # TE
+                        card_style = "background-color: #0f172a; border: 1px solid #581c87; color: #f8fafc;"
+                    status_text = "🟢 Available"
+
+                pos_badge = get_position_badge(p["pos"])
                 col.markdown(
                     f"""
-                    <div style="padding:8px; border-radius:5px; margin-bottom:8px; text-align:center; {status_color}">
-                        <small>#{p['id']} - {p['pos']} ({p['team']})</small><br>
-                        <strong>{p['name']}</strong><br>
-                        <span>{"❌ DRAFTED" if is_drafted else "🟢 Available"}</span>
+                    <div style="padding:10px; border-radius:8px; margin-bottom:10px; text-align:center; {card_style}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <small style="color: #94a3b8;">#{p['id']}</small>
+                            {pos_badge}
+                        </div>
+                        <strong style="font-size: 0.95rem;">{p['name']}</strong><br>
+                        <small style="color: #cbd5e1;">{p['team']} • Bye {p['bye']}</small><br>
+                        <span style="font-size: 0.75rem; font-weight: bold; margin-top: 4px; display:inline-block;">{status_text}</span>
                     </div>
                 """,
                     unsafe_allow_html=True,
                 )
 
 
-# --- VIEW 3: MY ROSTER & BYE ANALYZER ---
-elif view_mode == "My Roster & Bye Analyzer":
+# --- TAB 3: MY ROSTER & BYE ANALYZER ---
+with tab_roster:
     st.subheader(f"📋 Roster Sheet for: {team_name}")
 
     slots_config = [
@@ -489,19 +587,37 @@ elif view_mode == "My Roster & Bye Analyzer":
             else None
         )
         if assigned:
-            st.success(
-                f"**{label}:** {assigned['name']} ({assigned['pos']} - {assigned['team']} | Bye: Week {assigned['bye']})"
+            badge = get_position_badge(assigned["pos"])
+            st.markdown(
+                f"""
+                <div style="background-color: #1e293b; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #3b82f6; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{label}:</strong> {assigned['name']} ({assigned['team']} | Bye: Week {assigned['bye']})
+                    </div>
+                    <div>{badge}</div>
+                </div>
+            """,
+                unsafe_allow_html=True,
             )
         else:
-            st.info(f"**{label}:** — Empty Slot —")
+            st.markdown(
+                f"""
+                <div style="background-color: #0f172a; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; border: 1px dashed #334155; color: #64748b;">
+                    <strong>{label}:</strong> — Empty Slot —
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
 
     st.markdown("### Bench Reserves")
     if not st.session_state.roster["BN"]:
         st.caption("No bench players added yet.")
     else:
         for bp in st.session_state.roster["BN"]:
-            st.write(
-                f"• {bp['name']} | {bp['pos']} - {bp['team']} (Bye: Week {bp['bye']})"
+            badge = get_position_badge(bp["pos"])
+            st.markdown(
+                f"• {badge} **{bp['name']}** ({bp['team']} - Bye: Week {bp['bye']})",
+                unsafe_allow_html=True,
             )
 
     st.markdown("---")
@@ -528,17 +644,13 @@ elif view_mode == "My Roster & Bye Analyzer":
             )
 
 
-# --- VIEW 4: AI / AUTO-DRAFT LOG ---
-elif view_mode == "AI / Auto-Draft Log":
+# --- TAB 4: AI AUTO-DRAFT LOG ---
+with tab_log:
     st.subheader("🤖 Simulated League Auto-Draft Activity")
-    st.markdown(
-        "Review picks made automatically by competing teams when auto-draft is active."
-    )
+    st.markdown("Review picks made automatically by competing teams.")
 
     if not st.session_state.auto_draft_history:
-        st.info(
-            "No auto-draft actions recorded yet. Toggle auto-draft on in the sidebar and make your selection in the draft room!"
-        )
+        st.info("No auto-draft actions recorded yet.")
     else:
         for log in reversed(st.session_state.auto_draft_history):
             st.markdown(log)
@@ -558,4 +670,3 @@ elif view_mode == "AI / Auto-Draft Log":
             "BN": [],
         }
         st.rerun()
-            
