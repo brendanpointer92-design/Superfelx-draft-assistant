@@ -128,7 +128,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 57, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 7},
     {"Rank": 58, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7},
     {"Rank": 59, "Name": "Michael Penix Jr.", "Pos": "QB", "Team": "ATL", "Tier": 7},
-    {"Rank": 60, "Name": "Bryce Young", "Pos": "CAR", "Team": "CAR", "Tier": 7},
+    {"Rank": 60, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 7},
     # Tier 8
     {"Rank": 61, "Name": "Colston Loveland", "Pos": "TE", "Team": "CHI", "Tier": 8},
     {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
@@ -267,7 +267,6 @@ def get_player_suggestions(team_num, top_n=3):
         return pd.DataFrame()
     
     # Calculate dynamic recommendation score
-    # Score formula: Positional Need Weight * (100 - Rank)
     undrafted['Need_Multiplier'] = undrafted['Pos'].map(lambda p: needs.get(p, 0.5))
     undrafted['Rec_Score'] = undrafted['Need_Multiplier'] * (105 - undrafted['Rank'])
     
@@ -371,20 +370,21 @@ tab_cheat, tab_board, tab_rosters = st.tabs(["📋 Cheat Sheet & Quick Draft", "
 # TAB 1: CHEAT SHEET & QUICK DRAFT
 # -----------------------------------------------------------------------------
 with tab_cheat:
-    # -------------------------------------------------------------
-    # FEATURE: SUGGESTIONS ENGINE DISPLAY
-    # -------------------------------------------------------------
     if on_the_clock and current_pick <= max_picks:
-        st.markdown(f"### 💡 Recommended Targets for **Team {on_the_clock}**" + (" *(YOUR TURN)*" if is_user_turn else ""))
+        user_turn_text = " *(YOUR TURN)*" if is_user_turn else ""
+        st.markdown(f"### 💡 Recommended Targets for **Team {on_the_clock}**{user_turn_text}")
         suggestions = get_player_suggestions(on_the_clock, top_n=3)
         
         if not suggestions.empty:
             s_cols = st.columns(len(suggestions))
             for idx, (_, s_player) in enumerate(suggestions.iterrows()):
                 with s_cols[idx]:
-                    st.markdown(
-                        f"""
-                        <div class="rec-card">
-                            <span class="badge-{s_player['Pos'].lower()}">{s_player['Pos']}</span> <b>{s_player['Name']}</b> ({s_player['Team']})<br/>
-                            <small><b>Rank:</b> #{s_player['Rank']} | <b>Tier:</b> {s_player['Tier']}</small><br/>
-    
+                    pos_lower = str(s_player['Pos']).lower()
+                    card_html = (
+                        f'<div class="rec-card">'
+                        f'<span class="badge-{pos_lower}">{s_player["Pos"]}</span> <b>{s_player["Name"]}</b> ({s_player["Team"]})<br/>'
+                        f'<small><b>Rank:</b> #{s_player["Rank"]} | <b>Tier:</b> {s_player["Tier"]}</small><br/>'
+                        f'<small style="color: #58a6ff;">{s_player["Reason"]}</small>'
+                        f'</div>'
+                    )
+                    st.markdown(card_h
