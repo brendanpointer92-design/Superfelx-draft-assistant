@@ -25,13 +25,23 @@ if "roster" not in st.session_state:
         "BN": [],
     }
 
-# Sidebar Customizations
+if "auto_draft_history" not in st.session_state:
+    st.session_state.auto_draft_history = []
+
+# Sidebar Customizations & Auto-Draft Toggle
 st.sidebar.header("⚙️ League Settings")
 team_name = st.sidebar.text_input("Your Team Name", "Gridiron Greats")
 draft_position = st.sidebar.selectbox(
     "Select Your Draft Slot",
-    [f"Round 1, Pick {i} (1.0{i} if <10)" for i in range(1, 11)]
-    + ["Custom Late/Middle"],
+    [f"Round 1, Pick {i}" for i in range(1, 11)] + ["Custom Late/Middle"],
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🤖 Simulation Control")
+auto_draft_enabled = st.sidebar.toggle(
+    "Enable Auto-Draft for Other Teams",
+    value=False,
+    help="When turned on, drafting your player will automatically trigger AI picks for the other league slots from the top available board.",
 )
 
 
@@ -243,15 +253,20 @@ df_players = load_150_players()
 # App Header
 st.title(f"🏈 Superflex Draft Assistant: {team_name}")
 st.markdown(
-    f"**Draft Slot Configured:** `{draft_position}` | **10-Team Superflex Standard Scoring**"
+    f"**Draft Slot:** `{draft_position}` | **Auto-Draft Status:** `{'🟢 ON' if auto_draft_enabled else '🔴 OFF'}`"
 )
 st.markdown("---")
 
-# Sidebar navigation
+# Sidebar view navigation
 st.sidebar.markdown("---")
 view_mode = st.sidebar.radio(
     "Select View Mode",
-    ["Draft Room (Main)", "Full Draft Board", "My Roster & Bye Analyzer"],
+    [
+        "Draft Room (Main)",
+        "Full Draft Board",
+        "My Roster & Bye Analyzer",
+        "AI / Auto-Draft Log",
+    ],
 )
 
 total_drafted = len(st.session_state.drafted_ids)
@@ -267,7 +282,6 @@ if view_mode == "Draft Room (Main)":
     with col_right:
         st.subheader("💡 FantasyPros-Inspired Expert Tip Box")
 
-        # Dynamic Roster Auditing for Strengths/Weaknesses
         qbs_total = len(st.session_state.roster["QB"]) + len(
             st.session_state.roster["SUPERFLEX"]
         )
@@ -275,17 +289,16 @@ if view_mode == "Draft Room (Main)":
         wrs_total = len(st.session_state.roster["WR"])
         tes_total = len(st.session_state.roster["TE"])
 
-        # Strengths & Weaknesses calculation
         strengths = []
         weaknesses = []
 
         if qbs_total >= 2:
             strengths.append(
-                "🟢 **QB Depth:** Secured 2+ starting signal callers, maximizing Superflex positional advantage."
+                "🟢 **QB Depth:** Secured 2+ starting signal callers, maximizing Superflex positional value."
             )
         else:
             weaknesses.append(
-                "🔴 **QB Scarcity:** Superflex format demands swift QB building; prioritize starting passers before Tier 2 runs dry."
+                "🔴 **QB Scarcity:** Superflex format demands swift QB building; target passers before tier drop-off."
             )
 
         if rbs_total + wrs_total >= 4:
@@ -294,16 +307,16 @@ if view_mode == "Draft Room (Main)":
             )
         else:
             weaknesses.append(
-                "🔴 **Flex Vulnerability:** Thin depth across standard skill positions."
+                "🔴 **Flex Vulnerability:** Build more depth across standard flex options."
             )
 
         if tes_total > 0:
             strengths.append(
-                "🟢 **TE Starter Locked:** Stable weekly output locked at tight end."
+                "🟢 **TE Starter Locked:** Stable weekly production locked in."
             )
         else:
             weaknesses.append(
-                "🟡 **TE Value Watch:** Monitor tier breaks; elite options like Brock Bowers or Trey McBride offer heavy positional advantage if available."
+                "🟡 **TE Value Watch:** Monitor tier breaks for high-end upside."
             )
 
         with st.expander("📊 Live Roster Strengths & Weaknesses", expanded=True):
@@ -321,9 +334,7 @@ if view_mode == "Draft Room (Main)":
                 for w in weaknesses:
                     st.markdown(w)
             else:
-                st.caption(
-                    "No critical weaknesses flagged yet. Keep balancing value."
-                )
+                st.caption("No critical weaknesses flagged yet.")
 
         st.markdown("---")
         st.subheader("⭐ My Wishlist Queue")
@@ -365,7 +376,7 @@ if view_mode == "Draft Room (Main)":
                 | filtered["team"].str.lower().contains(search_q.lower())
             ]
 
-        for _, row in filtered.head(35).iterrows():
+        for _, row in filtered.head(30).iterrows():
             rc1, rc2, rc3, rc4, rc5, rc6 = st.columns([1, 3, 1, 1, 1, 1])
             rc1.write(f"#{row['id']}")
             rc2.markdown(f"**{row['name']}**")
@@ -388,6 +399,7 @@ if view_mode == "Draft Room (Main)":
                 if row["id"] in st.session_state.queue_ids:
                     st.session_state.queue_ids.remove(row["id"])
 
+                # Roster Routing
                 r = st.session_state.roster
                 if p_obj["pos"] == "QB" and len(r["QB"]) < 1:
                     r["QB"].append(p_obj)
@@ -407,6 +419,22 @@ if view_mode == "Draft Room (Main)":
                     r["SUPERFLEX"].append(p_obj)
                 else:
                     r["BN"].append(p_obj)
+
+                # AUTO-DRAFT SIMULATION LOGIC FOR OTHER TEAMS
+                if auto_draft_enabled:
+                    # Simulate 3 other league picks per user turn to keep pace
+                    available_pool = df_players[
+                        ~df_players["id"].isin(st.session_state.drafted_ids)
+                    ]
+                    num_simulated_picks = min(3, len(available_pool))
+                    sim_picks = available_pool.head(num_simulated_picks)
+
+                    for _, sim_row in sim_picks.iterrows():
+                        st.session_state.drafted_ids.add(sim_row["id"])
+                        st.session_state.auto_draft_history.append(
+                            f"🤖 AI Team drafted: **{sim_row['name']}** ({sim_row['pos']} - {sim_row['team']})"
+                        )
+
                 st.rerun()
 
 
@@ -499,10 +527,27 @@ elif view_mode == "My Roster & Bye Analyzer":
                 "✅ No major starting lineup bye week conflicts detected!"
             )
 
+
+# --- VIEW 4: AI / AUTO-DRAFT LOG ---
+elif view_mode == "AI / Auto-Draft Log":
+    st.subheader("🤖 Simulated League Auto-Draft Activity")
+    st.markdown(
+        "Review picks made automatically by competing teams when auto-draft is active."
+    )
+
+    if not st.session_state.auto_draft_history:
+        st.info(
+            "No auto-draft actions recorded yet. Toggle auto-draft on in the sidebar and make your selection in the draft room!"
+        )
+    else:
+        for log in reversed(st.session_state.auto_draft_history):
+            st.markdown(log)
+
     st.markdown("---")
-    if st.button("Reset Entire Draft Board"):
+    if st.button("Reset Entire Draft Board & History"):
         st.session_state.drafted_ids = set()
         st.session_state.queue_ids = set()
+        st.session_state.auto_draft_history = []
         st.session_state.roster = {
             "QB": [],
             "RB": [],
@@ -513,4 +558,4 @@ elif view_mode == "My Roster & Bye Analyzer":
             "BN": [],
         }
         st.rerun()
-        
+            
