@@ -25,44 +25,47 @@ if "roster" not in st.session_state:
         "BN": [],
     }
 
+# Sidebar Customizations
+st.sidebar.header("⚙️ League Settings")
+team_name = st.sidebar.text_input("Your Team Name", "Gridiron Greats")
+draft_position = st.sidebar.selectbox(
+    "Select Your Draft Slot",
+    [f"Round 1, Pick {i} (1.0{i} if <10)" for i in range(1, 11)]
+    + ["Custom Late/Middle"],
+)
 
-# Comprehensive 150-Player Database based on Draft Sharks Superflex Rankings
+
+# Comprehensive 150-Player Database based on Superflex Rankings
 @st.cache_data
 def load_150_players():
     base_players = [
         {"id": 1, "name": "Josh Allen", "pos": "QB", "team": "BUF", "bye": 7},
-        {"id": 2, "name": "Jahmyr Gibbs", "pos": "RB", "team": "DET", "bye": 6},
-        {"id": 3, "name": "Bijan Robinson", "pos": "RB", "team": "ATL", "bye": 11},
-        {"id": 4, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "bye": 13},
-        {"id": 5, "name": "Puka Nacua", "pos": "WR", "team": "LAR", "bye": 11},
-        {"id": 6, "name": "Drake Maye", "pos": "QB", "team": "NE", "bye": 11},
-        {"id": 7, "name": "Joe Burrow", "pos": "QB", "team": "CIN", "bye": 6},
-        {"id": 8, "name": "Ja'Marr Chase", "pos": "WR", "team": "CIN", "bye": 6},
+        {"id": 2, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "bye": 13},
+        {"id": 3, "name": "Drake Maye", "pos": "QB", "team": "NE", "bye": 11},
+        {"id": 4, "name": "Joe Burrow", "pos": "QB", "team": "CIN", "bye": 6},
+        {"id": 5, "name": "Jayden Daniels", "pos": "QB", "team": "WAS", "bye": 7},
+        {"id": 6, "name": "Jalen Hurts", "pos": "QB", "team": "PHI", "bye": 10},
+        {"id": 7, "name": "Bijan Robinson", "pos": "RB", "team": "ATL", "bye": 11},
+        {"id": 8, "name": "Jahmyr Gibbs", "pos": "RB", "team": "DET", "bye": 6},
+        {"id": 9, "name": "Ja'Marr Chase", "pos": "WR", "team": "CIN", "bye": 6},
+        {"id": 10, "name": "Justin Herbert", "pos": "QB", "team": "LAC", "bye": 7},
+        {"id": 11, "name": "Caleb Williams", "pos": "QB", "team": "CHI", "bye": 10},
+        {"id": 12, "name": "Puka Nacua", "pos": "WR", "team": "LAR", "bye": 11},
         {
-            "id": 9,
+            "id": 13,
             "name": "Jaxon Smith-Njigba",
             "pos": "WR",
             "team": "SEA",
             "bye": 11,
         },
         {
-            "id": 10,
-            "name": "Christian McCaffrey",
-            "pos": "RB",
-            "team": "SF",
-            "bye": 8,
+            "id": 14,
+            "name": "Trevor Lawrence",
+            "pos": "QB",
+            "team": "JAC",
+            "bye": 7,
         },
-        {
-            "id": 11,
-            "name": "Jonathan Taylor",
-            "pos": "RB",
-            "team": "IND",
-            "bye": 13,
-        },
-        {"id": 12, "name": "Jayden Daniels", "pos": "QB", "team": "WAS", "bye": 7},
-        {"id": 13, "name": "Jalen Hurts", "pos": "QB", "team": "PHI", "bye": 10},
-        {"id": 14, "name": "James Cook", "pos": "RB", "team": "BUF", "bye": 7},
-        {"id": 15, "name": "Derrick Henry", "pos": "RB", "team": "BAL", "bye": 13},
+        {"id": 15, "name": "Dak Prescott", "pos": "QB", "team": "DAL", "bye": 14},
         {
             "id": 16,
             "name": "Amon-Ra St. Brown",
@@ -70,108 +73,84 @@ def load_150_players():
             "team": "DET",
             "bye": 6,
         },
-        {"id": 17, "name": "CeeDee Lamb", "pos": "WR", "team": "DAL", "bye": 14},
-        {"id": 18, "name": "Justin Jefferson", "pos": "WR", "team": "MIN", "bye": 6},
-        {"id": 19, "name": "Saquon Barkley", "pos": "RB", "team": "PHI", "bye": 10},
         {
-            "id": 20,
-            "name": "Trevor Lawrence",
-            "pos": "QB",
-            "team": "JAC",
-            "bye": 7,
-        },
-        {"id": 21, "name": "Justin Herbert", "pos": "QB", "team": "LAC", "bye": 7},
-        {"id": 22, "name": "Caleb Williams", "pos": "QB", "team": "CHI", "bye": 10},
-        {"id": 23, "name": "Brock Purdy", "pos": "QB", "team": "SF", "bye": 8},
-        {"id": 24, "name": "Ashton Jeanty", "pos": "RB", "team": "LVR", "bye": 13},
-        {"id": 25, "name": "Kyler Murray", "pos": "QB", "team": "MIN", "bye": 6},
-        {"id": 26, "name": "Dak Prescott", "pos": "QB", "team": "DAL", "bye": 14},
-        {"id": 27, "name": "A.J. Brown", "pos": "WR", "team": "NE", "bye": 11},
-        {"id": 28, "name": "Drake London", "pos": "WR", "team": "ATL", "bye": 11},
-        {"id": 29, "name": "George Pickens", "pos": "WR", "team": "DAL", "bye": 14},
-        {"id": 30, "name": "Jaxson Dart", "pos": "QB", "team": "NYG", "bye": 8},
-        {
-            "id": 31,
-            "name": "Kenneth Walker III",
+            "id": 17,
+            "name": "Christian McCaffrey",
             "pos": "RB",
-            "team": "KC",
-            "bye": 5,
+            "team": "SF",
+            "bye": 8,
         },
         {
-            "id": 32,
-            "name": "Omarion Hampton",
+            "id": 18,
+            "name": "Jonathan Taylor",
             "pos": "RB",
-            "team": "LAC",
-            "bye": 7,
+            "team": "IND",
+            "bye": 13,
         },
-        {"id": 33, "name": "Rashee Rice", "pos": "WR", "team": "KC", "bye": 5},
-        {"id": 34, "name": "De'Von Achane", "pos": "RB", "team": "MIA", "bye": 6},
-        {"id": 35, "name": "Bo Nix", "pos": "QB", "team": "DEN", "bye": 10},
-        {"id": 36, "name": "Brock Bowers", "pos": "TE", "team": "LVR", "bye": 13},
-        {"id": 37, "name": "Josh Jacobs", "pos": "RB", "team": "GB", "bye": 11},
+        {"id": 19, "name": "CeeDee Lamb", "pos": "WR", "team": "DAL", "bye": 14},
+        {"id": 20, "name": "Jaxson Dart", "pos": "QB", "team": "NYG", "bye": 8},
+        {"id": 21, "name": "Brock Purdy", "pos": "QB", "team": "SF", "bye": 8},
+        {"id": 22, "name": "Justin Jefferson", "pos": "WR", "team": "MIN", "bye": 6},
+        {"id": 23, "name": "James Cook III", "pos": "RB", "team": "BUF", "bye": 7},
+        {"id": 24, "name": "Bo Nix", "pos": "QB", "team": "DEN", "bye": 10},
         {
-            "id": 38,
-            "name": "Patrick Mahomes",
+            "id": 25,
+            "name": "Patrick Mahomes II",
             "pos": "QB",
             "team": "KC",
             "bye": 5,
         },
-        {"id": 39, "name": "Tee Higgins", "pos": "WR", "team": "CIN", "bye": 6},
+        {"id": 26, "name": "Ashton Jeanty", "pos": "RB", "team": "LVR", "bye": 13},
+        {"id": 27, "name": "Drake London", "pos": "WR", "team": "ATL", "bye": 11},
         {
-            "id": 40,
-            "name": "Colston Loveland",
-            "pos": "TE",
-            "team": "CHI",
-            "bye": 10,
-        },
-        {"id": 41, "name": "Jeremiah Love", "pos": "RB", "team": "ARI", "bye": 14},
-        {
-            "id": 42,
-            "name": "Christian Watson",
-            "pos": "WR",
-            "team": "GB",
-            "bye": 11,
-        },
-        {"id": 43, "name": "Chase Brown", "pos": "RB", "team": "CIN", "bye": 6},
-        {"id": 44, "name": "Trey McBride", "pos": "TE", "team": "ARI", "bye": 14},
-        {"id": 45, "name": "Zay Flowers", "pos": "WR", "team": "BAL", "bye": 13},
-        {"id": 46, "name": "Chris Olave", "pos": "WR", "team": "NO", "bye": 8},
-        {"id": 47, "name": "Kyren Williams", "pos": "RB", "team": "LAR", "bye": 11},
-        {"id": 48, "name": "Javonte Williams", "pos": "RB", "team": "DAL", "bye": 14},
-        {"id": 49, "name": "DeVonta Smith", "pos": "WR", "team": "PHI", "bye": 10},
-        {"id": 50, "name": "Davante Adams", "pos": "WR", "team": "LAR", "bye": 11},
-        {"id": 51, "name": "Tyler Warren", "pos": "TE", "team": "IND", "bye": 13},
-        {"id": 52, "name": "Malik Nabers", "pos": "WR", "team": "NYG", "bye": 8},
-        {"id": 53, "name": "Jared Goff", "pos": "QB", "team": "DET", "bye": 6},
-        {"id": 54, "name": "Jameson Williams", "pos": "WR", "team": "DET", "bye": 6},
-        {"id": 55, "name": "Travis Etienne", "pos": "RB", "team": "NO", "bye": 8},
-        {
-            "id": 56,
-            "name": "Terry McLaurin",
-            "pos": "WR",
-            "team": "WAS",
-            "bye": 7,
-        },
-        {"id": 57, "name": "Garrett Wilson", "pos": "WR", "team": "NYJ", "bye": 13},
-        {"id": 58, "name": "Tucker Kraft", "pos": "TE", "team": "GB", "bye": 11},
-        {"id": 59, "name": "Breece Hall", "pos": "RB", "team": "NYJ", "bye": 13},
-        {
-            "id": 60,
-            "name": "Tetairoa McMillan",
-            "pos": "WR",
-            "team": "CAR",
-            "bye": 5,
-        },
-        {
-            "id": 61,
+            "id": 28,
             "name": "Matthew Stafford",
             "pos": "QB",
             "team": "LAR",
             "bye": 11,
         },
+        {"id": 29, "name": "A.J. Brown", "pos": "WR", "team": "NE", "bye": 11},
+        {"id": 30, "name": "De'Von Achane", "pos": "RB", "team": "MIA", "bye": 6},
+        {"id": 31, "name": "Chase Brown", "pos": "RB", "team": "CIN", "bye": 6},
+        {"id": 32, "name": "Brock Bowers", "pos": "TE", "team": "LVR", "bye": 13},
+        {"id": 33, "name": "Nico Collins", "pos": "WR", "team": "HOU", "bye": 8},
+        {"id": 34, "name": "Saquon Barkley", "pos": "RB", "team": "PHI", "bye": 10},
+        {
+            "id": 35,
+            "name": "Omarion Hampton",
+            "pos": "RB",
+            "team": "LAC",
+            "bye": 7,
+        },
+        {"id": 36, "name": "Jared Goff", "pos": "QB", "team": "DET", "bye": 6},
+        {"id": 37, "name": "George Pickens", "pos": "WR", "team": "DAL", "bye": 14},
+        {"id": 38, "name": "Derrick Henry", "pos": "RB", "team": "BAL", "bye": 13},
+        {"id": 39, "name": "Kyler Murray", "pos": "QB", "team": "MIN", "bye": 6},
+        {"id": 40, "name": "Trey McBride", "pos": "TE", "team": "ARI", "bye": 14},
+        {
+            "id": 41,
+            "name": "Kenneth Walker III",
+            "pos": "RB",
+            "team": "KC",
+            "bye": 5,
+        },
+        {"id": 42, "name": "Rashee Rice", "pos": "WR", "team": "KC", "bye": 5},
+        {"id": 43, "name": "Chris Olave", "pos": "WR", "team": "NO", "bye": 8},
+        {"id": 44, "name": "Jordan Love", "pos": "QB", "team": "GB", "bye": 11},
+        {"id": 45, "name": "Baker Mayfield", "pos": "QB", "team": "TB", "bye": 18},
+        {"id": 46, "name": "DeVonta Smith", "pos": "WR", "team": "PHI", "bye": 10},
+        {"id": 47, "name": "Tyler Shough", "pos": "QB", "team": "NO", "bye": 8},
+        {"id": 48, "name": "Tee Higgins", "pos": "WR", "team": "CIN", "bye": 6},
+        {"id": 49, "name": "Zay Flowers", "pos": "WR", "team": "BAL", "bye": 13},
+        {
+            "id": 50,
+            "name": "Tetairoa McMillan",
+            "pos": "WR",
+            "team": "CAR",
+            "bye": 5,
+        },
     ]
 
-    # Generate remaining players cleanly up to 150 following typical draft board distribution
     first_names = [
         "Marcus",
         "Brandon",
@@ -184,7 +163,6 @@ def load_150_players():
         "Kyle",
         "Kevin",
         "Brian",
-        "Brandon",
         "Xavier",
         "Trevor",
         "DeVonta",
@@ -244,10 +222,8 @@ def load_150_players():
 
     current_id = len(base_players) + 1
     while len(base_players) < 150:
-        pos = random.choices(
-            positions, weights=[35, 45, 12, 8], k=1
-        )[0]  # weighted spread
-        name = f"{random.choice(first_names)} {random.choice(last_names)} ({current_id})"
+        pos = random.choices(positions, weights=[33, 42, 17, 8], k=1)[0]
+        name = f"{random.choice(first_names)} {random.choice(last_names)}"
         base_players.append(
             {
                 "id": current_id,
@@ -265,21 +241,19 @@ def load_150_players():
 df_players = load_150_players()
 
 # App Header
-st.title("🏈 Superflex Draft Assistant Pro")
+st.title(f"🏈 Superflex Draft Assistant: {team_name}")
 st.markdown(
-    "**10-Team • Standard Scoring • Draft Board, Roster Manager & Tier Tracker**"
+    f"**Draft Slot Configured:** `{draft_position}` | **10-Team Superflex Standard Scoring**"
 )
 st.markdown("---")
 
-# Sidebar navigation / tool controls
-st.sidebar.header("Draft Controls")
+# Sidebar navigation
+st.sidebar.markdown("---")
 view_mode = st.sidebar.radio(
     "Select View Mode",
     ["Draft Room (Main)", "Full Draft Board", "My Roster & Bye Analyzer"],
 )
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("Quick Stats")
 total_drafted = len(st.session_state.drafted_ids)
 st.sidebar.progress(
     total_drafted / 150, text=f"Draft Pool Progress: {total_drafted}/150 Picked"
@@ -291,32 +265,70 @@ if view_mode == "Draft Room (Main)":
     col_left, col_right = st.columns([2, 1])
 
     with col_right:
-        st.subheader("💡 Expert Advice")
-        qb_count = len(st.session_state.roster["QB"]) + len(
-            [
-                p
-                for p in st.session_state.roster["SUPERFLEX"]
-                if p["pos"] == "QB"
-            ]
-        )
+        st.subheader("💡 FantasyPros-Inspired Expert Tip Box")
 
-        if qb_count == 0:
-            st.warning(
-                "**Priority Warning:** You lack a starting Quarterback. Secure a top passer before Tier 1 runs dry."
-            )
-        elif qb_count == 1:
-            st.info(
-                "**Strategy Tip:** Anchor QB locked. Focus on high-end Standard RBs or elite WR target volume."
+        # Dynamic Roster Auditing for Strengths/Weaknesses
+        qbs_total = len(st.session_state.roster["QB"]) + len(
+            st.session_state.roster["SUPERFLEX"]
+        )
+        rbs_total = len(st.session_state.roster["RB"])
+        wrs_total = len(st.session_state.roster["WR"])
+        tes_total = len(st.session_state.roster["TE"])
+
+        # Strengths & Weaknesses calculation
+        strengths = []
+        weaknesses = []
+
+        if qbs_total >= 2:
+            strengths.append(
+                "🟢 **QB Depth:** Secured 2+ starting signal callers, maximizing Superflex positional advantage."
             )
         else:
-            st.success(
-                "**Roster Health:** QB structure is rock solid. Focus on depth and FLEX value."
+            weaknesses.append(
+                "🔴 **QB Scarcity:** Superflex format demands swift QB building; prioritize starting passers before Tier 2 runs dry."
             )
+
+        if rbs_total + wrs_total >= 4:
+            strengths.append(
+                "🟢 **Skill-Player Floor:** Strong baseline volume established at RB/WR."
+            )
+        else:
+            weaknesses.append(
+                "🔴 **Flex Vulnerability:** Thin depth across standard skill positions."
+            )
+
+        if tes_total > 0:
+            strengths.append(
+                "🟢 **TE Starter Locked:** Stable weekly output locked at tight end."
+            )
+        else:
+            weaknesses.append(
+                "🟡 **TE Value Watch:** Monitor tier breaks; elite options like Brock Bowers or Trey McBride offer heavy positional advantage if available."
+            )
+
+        with st.expander("📊 Live Roster Strengths & Weaknesses", expanded=True):
+            st.markdown("**Strengths:**")
+            if strengths:
+                for s in strengths:
+                    st.markdown(s)
+            else:
+                st.caption(
+                    "Draft more players to establish positional strengths."
+                )
+
+            st.markdown("**Weaknesses & Areas to Target:**")
+            if weaknesses:
+                for w in weaknesses:
+                    st.markdown(w)
+            else:
+                st.caption(
+                    "No critical weaknesses flagged yet. Keep balancing value."
+                )
 
         st.markdown("---")
         st.subheader("⭐ My Wishlist Queue")
         if not st.session_state.queue_ids:
-            st.caption("No players queued. Click 'Queue' on any player.")
+            st.caption("No players queued.")
         else:
             queued_df = df_players[
                 df_players["id"].isin(st.session_state.queue_ids)
@@ -324,13 +336,13 @@ if view_mode == "Draft Room (Main)":
             ]
             for _, qrow in queued_df.iterrows():
                 qc1, qc2 = st.columns([3, 1])
-                qc1.text(f"{qrow['name']} ({qrow['pos']})")
+                qc1.text(f"{qrow['name']} ({qrow['pos']}-{qrow['team']})")
                 if qc2.button("Remove", key=f"unq_{qrow['id']}"):
                     st.session_state.queue_ids.remove(qrow["id"])
                     st.rerun()
 
     with col_left:
-        st.subheader("Available Player Pool")
+        st.subheader("Available Player Pool (Top 150)")
 
         f1, f2 = st.columns(2)
         with f1:
@@ -353,15 +365,13 @@ if view_mode == "Draft Room (Main)":
                 | filtered["team"].str.lower().contains(search_q.lower())
             ]
 
-        # Render rows with Action buttons
-        for _, row in filtered.head(40).iterrows():
+        for _, row in filtered.head(35).iterrows():
             rc1, rc2, rc3, rc4, rc5, rc6 = st.columns([1, 3, 1, 1, 1, 1])
             rc1.write(f"#{row['id']}")
             rc2.markdown(f"**{row['name']}**")
             rc3.code(row["pos"])
             rc4.text(row["team"])
 
-            # Queue Button toggle
             in_q = row["id"] in st.session_state.queue_ids
             if rc5.button(
                 "📌 Queue" if not in_q else "Unqueue", key=f"q_{row['id']}"
@@ -378,7 +388,6 @@ if view_mode == "Draft Room (Main)":
                 if row["id"] in st.session_state.queue_ids:
                     st.session_state.queue_ids.remove(row["id"])
 
-                # Smart Roster Allocation
                 r = st.session_state.roster
                 if p_obj["pos"] == "QB" and len(r["QB"]) < 1:
                     r["QB"].append(p_obj)
@@ -403,10 +412,7 @@ if view_mode == "Draft Room (Main)":
 
 # --- VIEW 2: FULL DRAFT BOARD ---
 elif view_mode == "Full Draft Board":
-    st.subheader("🏟️ Overall Draft Tracker (Top 150)")
-    st.markdown("Visual grid overview of player availability.")
-
-    # Grid display of all 150 players
+    st.subheader("🏟️ Comprehensive 150-Player Draft Board")
     cols_per_row = 5
     all_rows = df_players.to_dict("records")
 
@@ -435,7 +441,7 @@ elif view_mode == "Full Draft Board":
 
 # --- VIEW 3: MY ROSTER & BYE ANALYZER ---
 elif view_mode == "My Roster & Bye Analyzer":
-    st.subheader("📋 My Comprehensive Starting Lineup & Bench")
+    st.subheader(f"📋 Roster Sheet for: {team_name}")
 
     slots_config = [
         ("QB", "Quarterback (QB)", 0),
@@ -448,7 +454,6 @@ elif view_mode == "My Roster & Bye Analyzer":
         ("SUPERFLEX", "Superflex (QB/FLEX)", 0),
     ]
 
-    roster_lines = []
     for cat, label, idx in slots_config:
         assigned = (
             st.session_state.roster[cat][idx]
@@ -458,9 +463,6 @@ elif view_mode == "My Roster & Bye Analyzer":
         if assigned:
             st.success(
                 f"**{label}:** {assigned['name']} ({assigned['pos']} - {assigned['team']} | Bye: Week {assigned['bye']})"
-            )
-            roster_lines.append(
-                f"{label}: {assigned['name']} ({assigned['pos']})"
             )
         else:
             st.info(f"**{label}:** — Empty Slot —")
@@ -473,11 +475,9 @@ elif view_mode == "My Roster & Bye Analyzer":
             st.write(
                 f"• {bp['name']} | {bp['pos']} - {bp['team']} (Bye: Week {bp['bye']})"
             )
-            roster_lines.append(f"Bench: {bp['name']} ({bp['pos']})")
 
     st.markdown("---")
     st.subheader("🛡️ Bye Week Analyzer")
-    # Check bye week overlaps in starters
     all_starters = []
     for cat, _, idx in slots_config:
         if len(st.session_state.roster[cat]) > idx:
@@ -492,7 +492,7 @@ elif view_mode == "My Roster & Bye Analyzer":
         overloaded = [week for week, count in bye_counts.items() if count >= 2]
         if overloaded:
             st.warning(
-                f"⚠️ **Bye Conflict Warning:** You have multiple starting players on a Bye during Week(s): {', '.join(map(str, overloaded))}. Keep an eye on depth!"
+                f"⚠️ **Bye Conflict Warning:** Multiple starting players on Bye during Week(s): {', '.join(map(str, overloaded))}."
             )
         else:
             st.success(
