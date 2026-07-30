@@ -26,6 +26,14 @@ st.markdown("""
     .badge-dst { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-k { background-color: #d62828; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     
+    .rec-card {
+        border: 1px solid #1f6beb;
+        background-color: #0d1117;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
     .draft-card {
         border: 1px solid #30363d;
         border-radius: 6px;
@@ -120,7 +128,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 57, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 7},
     {"Rank": 58, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7},
     {"Rank": 59, "Name": "Michael Penix Jr.", "Pos": "QB", "Team": "ATL", "Tier": 7},
-    {"Rank": 60, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 7},
+    {"Rank": 60, "Name": "Bryce Young", "Pos": "CAR", "Team": "CAR", "Tier": 7},
     # Tier 8
     {"Rank": 61, "Name": "Colston Loveland", "Pos": "TE", "Team": "CHI", "Tier": 8},
     {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
@@ -167,6 +175,14 @@ DEFAULT_PLAYERS = [
     {"Rank": 100, "Name": "Will Levis", "Pos": "QB", "Team": "TEN", "Tier": 11},
 ]
 
+# Target roster construct for Superflex League (1QB, 2RB, 2WR, 1TE, 1FLEX, 1SFLEX)
+ROSTER_TARGETS = {
+    'QB': 2,   # 1 Starter + 1 Superflex
+    'RB': 2,   # Starters
+    'WR': 3,   # Starters
+    'TE': 1    # Starter
+}
+
 # -----------------------------------------------------------------------------
 # 3. SESSION STATE INITIALIZATION
 # -----------------------------------------------------------------------------
@@ -193,7 +209,7 @@ if 'draft_history' not in st.session_state:
     st.session_state.draft_history = []
 
 # -----------------------------------------------------------------------------
-# 4. HELPER FUNCTIONS
+# 4. HELPER FUNCTIONS & SUGGESTION ENGINE
 # -----------------------------------------------------------------------------
 def get_on_the_clock_team(pick_num, total_teams):
     """Calculates team number on the clock using standard snake logic."""
@@ -224,6 +240,61 @@ def undo_last_pick():
 
 def get_badge_html(pos):
     return f'<span class="badge-{str(pos).lower()}">{pos}</span>'
+
+def evaluate_team_needs(team_num):
+    """Evaluates positional need scores (High, Med, Low) based on current roster."""
+    roster = st.session_state.players_df[st.session_state.players_df['Drafted_By'] == team_num]
+    counts = roster['Pos'].value_counts().to_dict()
+    
+    needs = {}
+    for pos, target in ROSTER_TARGETS.items():
+        curr = counts.get(pos, 0)
+        if curr < target:
+            # Urgent need if missing core starters (e.g. 0 QB or 0 RB)
+            needs[pos] = 2.0 if curr == 0 else 1.2
+        elif curr == target:
+            needs[pos] = 0.8 # Moderate need for depth/flex
+        else:
+            needs[pos] = 0.4 # Low need
+    return needs
+
+def get_player_suggestions(team_num, top_n=3):
+    """Generates player suggestions combining positional need and best available rank."""
+    needs = evaluate_team_needs(team_num)
+    undrafted = st.session_state.players_df[st.session_state.players_df['Drafted'] == False].copy()
+    
+    if undrafted.empty:
+        return pd.DataFrame()
+    
+    # Calculate dynamic recommendation score
+    # Score formula: Positional Need Weight * (100 - Rank)
+    undrafted['Need_Multiplier'] = undrafted['Pos'].map(lambda p: needs.get(p, 0.5))
+    undrafted['Rec_Score'] = undrafted['Need_Multiplier'] * (105 - undrafted['Rank'])
+    
+    # Identify best overall player available regardless of need
+    best_overall_rank = undrafted['Rank'].min()
+    
+    # Generate reason flags
+    reasons = []
+    for idx, row in undrafted.iterrows():
+        pos_need = needs.get(row['Pos'], 0.5)
+        is_bpa = (row['Rank'] == best_overall_rank)
+        
+        if is_bpa and pos_need >= 1.2:
+            reasons.append("🔥 Best Available & High Positional Need")
+        elif is_bpa:
+            reasons.append("⭐ Best Player Available (BPA)")
+        elif pos_need >= 2.0:
+            reasons.append("⚠️ Critical Roster Need")
+        elif pos_need >= 1.2:
+            reasons.append("🎯 High Positional Need")
+        elif row['Tier'] <= 3:
+            reasons.append("💎 Elite Tier Remaining")
+        else:
+            reasons.append("👍 Solid Value Pick")
+            
+    undrafted['Reason'] = reasons
+    return undrafted.sort_values(by='Rec_Score', ascending=False).head(top_n)
 
 # -----------------------------------------------------------------------------
 # 5. SIDEBAR CONTROLS
@@ -300,136 +371,20 @@ tab_cheat, tab_board, tab_rosters = st.tabs(["📋 Cheat Sheet & Quick Draft", "
 # TAB 1: CHEAT SHEET & QUICK DRAFT
 # -----------------------------------------------------------------------------
 with tab_cheat:
-    col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
-    with col_f1:
-        search_query = st.text_input("🔍 Search Player", placeholder="Search by name or team...").strip().lower()
-    with col_f2:
-        pos_filter = st.multiselect("Filter Position", options=['QB', 'RB', 'WR', 'TE', 'DST', 'K'], default=['QB', 'RB', 'WR', 'TE'])
-    with col_f3:
-        hide_drafted = st.checkbox("Hide Drafted", value=True)
-
-    df = st.session_state.players_df.copy()
-    if hide_drafted:
-        df = df[df['Drafted'] == False]
-    if pos_filter:
-        df = df[df['Pos'].isin(pos_filter)]
-    if search_query:
-        df = df[df['Name'].str.lower().str.contains(search_query) | df['Team'].str.lower().str.contains(search_query)]
-
-    st.write(f"Showing **{len(df)}** players")
-    
-    for idx, row in df.iterrows():
-        c_rank, c_name, c_pos, c_team, c_tier, c_act1, c_act2 = st.columns([1, 3, 1, 1, 1, 2, 2])
+    # -------------------------------------------------------------
+    # FEATURE: SUGGESTIONS ENGINE DISPLAY
+    # -------------------------------------------------------------
+    if on_the_clock and current_pick <= max_picks:
+        st.markdown(f"### 💡 Recommended Targets for **Team {on_the_clock}**" + (" *(YOUR TURN)*" if is_user_turn else ""))
+        suggestions = get_player_suggestions(on_the_clock, top_n=3)
         
-        c_rank.write(f"**#{row['Rank']}**")
-        c_name.write(f"**{row['Name']}**")
-        c_pos.markdown(get_badge_html(row['Pos']), unsafe_allow_html=True)
-        c_team.write(f"{row['Team']}")
-        c_tier.write(f"Tier {row['Tier']}")
-        
-        if not row['Drafted']:
-            if current_pick <= max_picks:
-                if c_act1.button(f"Draft → Team {on_the_clock}", key=f"otc_{idx}"):
-                    draft_player(idx, on_the_clock)
-                    st.rerun()
-                if on_the_clock != st.session_state.user_team_num:
-                    if c_act2.button("Draft → MY Team", key=f"my_{idx}"):
-                        draft_player(idx, st.session_state.user_team_num)
-                        st.rerun()
-        else:
-            pick_val = int(row['Pick_Num']) if pd.notnull(row['Pick_Num']) else "?"
-            c_act1.write(f"✅ Team {row['Drafted_By']} (Pick #{pick_val})")
-
-# -----------------------------------------------------------------------------
-# TAB 2: VISUAL DRAFT BOARD
-# -----------------------------------------------------------------------------
-with tab_board:
-    st.subheader("Interactive Draft Grid")
-    
-    num_teams = st.session_state.num_teams
-    num_rounds = st.session_state.num_rounds
-    
-    # Pre-filter drafted players to avoid slow re-queries inside loops
-    drafted_players = st.session_state.players_df[st.session_state.players_df['Drafted'] == True].copy()
-    if not drafted_players.empty:
-        drafted_players['Pick_Num'] = drafted_players['Pick_Num'].astype(int)
-    
-    # Headers
-    board_cols = st.columns(num_teams)
-    for t_idx, col in enumerate(board_cols, start=1):
-        label = f"Team {t_idx}"
-        if t_idx == st.session_state.user_team_num:
-            label += " (YOU)"
-        col.markdown(f"**{label}**")
-
-    # Board rows
-    for r in range(1, num_rounds + 1):
-        r_cols = st.columns(num_teams)
-        for t in range(1, num_teams + 1):
-            # Calculate overall pick number
-            if r % 2 == 1:
-                p_num = (r - 1) * num_teams + t
-            else:
-                p_num = (r - 1) * num_teams + (num_teams - t + 1)
-            
-            # Match pick
-            match = drafted_players[drafted_players['Pick_Num'] == p_num]
-            
-            with r_cols[t-1]:
-                if not match.empty:
-                    player_data = match.iloc[0]
-                    p_name = player_data['Name']
-                    p_pos = player_data['Pos']
-                    p_team = player_data['Team']
-                    pos_class = f"draft-card-{p_pos.lower()}"
-                    
+        if not suggestions.empty:
+            s_cols = st.columns(len(suggestions))
+            for idx, (_, s_player) in enumerate(suggestions.iterrows()):
+                with s_cols[idx]:
                     st.markdown(
-                        f"""<div class="draft-card {pos_class}">
-                            <b>{p_name}</b><br/>
-                            <small>{p_pos} - {p_team} (#{p_num})</small>
-                        </div>""", 
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"""<div class="draft-card draft-card-empty">
-                            <small>#{p_num}</small>
-                        </div>""", 
-                        unsafe_allow_html=True
-                    )
-
-# -----------------------------------------------------------------------------
-# TAB 3: TEAM ROSTERS & BREAKDOWN
-# -----------------------------------------------------------------------------
-with tab_rosters:
-    st.subheader("Team Rosters")
+                        f"""
+                        <div class="rec-card">
+                            <span class="badge-{s_player['Pos'].lower()}">{s_player['Pos']}</span> <b>{s_player['Name']}</b> ({s_player['Team']})<br/>
+                            <small><b>Rank:</b> #{s_player['Rank']} | <b>Tier:</b> {s_player['Tier']}</small><br/>
     
-    selected_team_num = st.selectbox(
-        "Select Team",
-        options=list(range(1, st.session_state.num_teams + 1)),
-        format_func=lambda x: f"Team {x}" + (" (YOU)" if x == st.session_state.user_team_num else "")
-    )
-    
-    # Filter players drafted by selected team
-    team_roster = st.session_state.players_df[
-        st.session_state.players_df['Drafted_By'] == selected_team_num
-    ].copy()
-    
-    col_r1, col_r2 = st.columns([3, 2])
-    
-    with col_r1:
-        st.write(f"### Roster: Team {selected_team_num}")
-        if not team_roster.empty:
-            team_roster['Pick_Num'] = team_roster['Pick_Num'].astype(int)
-            display_roster = team_roster[['Pick_Num', 'Name', 'Pos', 'Team', 'Tier']].sort_values('Pick_Num')
-            st.dataframe(display_roster, hide_index=True, use_container_width=True)
-        else:
-            st.info("No players drafted yet for this team. Click 'Draft' on the Cheat Sheet tab to add players.")
-            
-    with col_r2:
-        st.write("### Positional Counts")
-        if not team_roster.empty:
-            pos_counts = team_roster['Pos'].value_counts()
-            st.bar_chart(pos_counts)
-        else:
-            st.info("No position breakdown available.")
