@@ -1,9 +1,9 @@
 import random
 import streamlit as st
 
-# --- PAGE CONFIGURATION ---
+# --- PAGE CONFIGURATION (Must be the very first Streamlit command) ---
 st.set_page_config(
-    page_title="Superflex Draft Assistant (10-Man Standard)",
+    page_title="Superflex Draft Assistant",
     page_layout="wide",
 )
 
@@ -328,7 +328,6 @@ with tab_avail:
 
 with tab_board:
   st.subheader("Visual Draft Board Grid")
-  # Render a simple text/markdown grid representation for the web
   for r in range(1, TOTAL_ROUNDS + 1):
     row_cols = st.columns(NUM_TEAMS)
     for t_idx in range(NUM_TEAMS):
@@ -356,3 +355,4 @@ with tab_rosters:
         else "Empty"
     )
     st.write(f"**{team_label}**: {roster_str}")
+      
