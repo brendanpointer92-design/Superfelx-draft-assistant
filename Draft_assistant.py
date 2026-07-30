@@ -163,7 +163,7 @@ class DraftApp:
   def __init__(self, root):
     self.root = root
     self.root.title("Superflex Draft Assistant (10-Man Standard)")
-    self.root.geometry("1400850")
+    self.root.geometry("1400x850")
     self.root.configure(bg="#1e1e1e")
 
     # League Settings
@@ -440,8 +440,7 @@ class DraftApp:
         bg_col = "#3c3c3c"
         for p in self.players:
           if p["drafted_by"] == t and p.get("pick_num") == pick_num:
-           player_name = f"{p['name']} ({p['pos']})"
-              
+            player_name = f"{p['name']} ({p['pos']})"
             if p["pos"] == "QB":
               bg_col = "#264f78"
             elif p["pos"] == "RB":
@@ -551,7 +550,7 @@ class DraftApp:
   def rename_teams_dialog(self):
     popup = tk.Toplevel(self.root)
     popup.title("Rename Teams")
-    popup.geometry("350-450")
+    popup.geometry("350x450")
     popup.configure(bg="#2d2d2d")
 
     tk.Label(
@@ -596,4 +595,4 @@ if __name__ == "__main__":
   root = tk.Tk()
   app = DraftApp(root)
   root.mainloop()
-      
+    
