@@ -1,13 +1,49 @@
 import random
 import streamlit as st
 
-# --- PAGE CONFIGURATION (Must be the very first Streamlit command) ---
+# --- PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Superflex Draft Assistant",
     page_layout="wide",
 )
 
-# --- FANTASYPROS SUPERFLEX 150 PLAYER DATA ---
+# --- CUSTOM CSS FOR STYLING ---
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #0e1117;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    .metric-card {
+        background-color: #1f2937;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #374151;
+        text-align: center;
+    }
+    .draft-cell {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 11px;
+        text-align: center;
+        min-height: 65px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+# --- FANTASYPROS SUPERFLEX 150 PLAYER DATA (STANDARD SCORING) ---
 RAW_PLAYERS = [
     ("Josh Allen", "BUF", "QB"),
     ("Lamar Jackson", "BAL", "QB"),
@@ -174,7 +210,6 @@ if "initialized" not in st.session_state:
   st.session_state.team_names[0] = "My Team"
   st.session_state.rosters = {i: [] for i in range(NUM_TEAMS)}
 
-  # Initialize player pool
   st.session_state.players = []
   for idx, (name, team, pos) in enumerate(RAW_PLAYERS[:150]):
     st.session_state.players.append({
@@ -223,14 +258,14 @@ def simulate_pick():
   chosen = available[0]
   if round_num <= 3:
     qbs = [p for p in available if p["pos"] == "QB"]
-    if qbs and random.random() < 0.7:
+    if qbs and random.random() < 0.75:
       chosen = qbs[0]
 
   draft_player(chosen["id"], team_idx)
 
 
-# --- SIDEBAR CONFIGURATION ---
-st.sidebar.header("League Configuration")
+# --- SIDEBAR: LEAGUE CONFIG & TEAM MANAGEMENT ---
+st.sidebar.header("🏈 Draft Settings")
 user_slot = st.sidebar.selectbox(
     "Your Draft Slot",
     options=list(range(1, NUM_TEAMS + 1)),
@@ -239,45 +274,50 @@ user_slot = st.sidebar.selectbox(
 st.session_state.user_team_idx = user_slot - 1
 
 st.sidebar.markdown("---")
-st.sidebar.header("Team Management")
-new_my_name = st.sidebar.text_input(
-    "Rename My Team", st.session_state.team_names[st.session_state.user_team_idx]
-)
-if new_my_name:
-  st.session_state.team_names[st.session_state.user_team_idx] = new_my_name
+st.sidebar.header("✏️ Rename Teams")
+for i in range(NUM_TEAMS):
+  current_name = st.session_state.team_names[i]
+  new_name = st.sidebar.text_input(f"Team {i+1} Name", current_name, key=f"rename_{i}")
+  st.session_state.team_names[i] = new_name
 
-if st.sidebar.button("Reset Draft"):
+st.sidebar.markdown("---")
+if st.sidebar.button("🔄 Reset Draft", type="primary"):
   for key in list(st.session_state.keys()):
     del st.session_state[key]
   st.rerun()
 
-# --- MAIN DASHBOARD HEADER ---
+# --- MAIN DASHBOARD BANNER ---
 round_num, pick_in_round, active_team_idx = get_current_turn()
 
+st.title("⚡ Superflex Draft Assistant (10-Man Standard)")
+
 if round_num is None:
-  st.success("Draft Completed!")
+  st.balloons()
+  st.success("🎉 Draft Completed! Check out the final team rosters below.")
 else:
   active_team_name = st.session_state.team_names[active_team_idx]
   is_user_turn = active_team_idx == st.session_state.user_team_idx
 
-  col_h1, col_h2 = st.columns([3, 1])
-  with col_h1:
+  col_b1, col_b2 = st.columns([3, 1])
+  with col_b1:
     if is_user_turn:
       st.markdown(
-          f"### 🟢 **YOUR TURN!** (Round {round_num}, Pick {pick_in_round} /"
-          f" Overall {st.session_state.current_pick})"
+          f"### 🟢 <span style='color:#22c55e;'>YOUR TURN!</span> (Round"
+          f" {round_num}, Pick {pick_in_round} | Overall"
+          f" {st.session_state.current_pick})",
+          unsafe_allow_html=True,
       )
     else:
       st.markdown(
-          f"### ⏳ On the Clock: **{active_team_name}** (Round {round_num}, Pick"
-          f" {pick_in_round} / Overall {st.session_state.current_pick})"
+          f"### ⏳ On the Clock: **{active_team_name}** (Round {round_num},"
+          f" Pick {pick_in_round} | Overall {st.session_state.current_pick})"
       )
-  with col_h2:
+  with col_b2:
     if not is_user_turn:
-      if st.button("Simulate Pick"):
+      if st.button("⏩ Simulate Pick"):
         simulate_pick()
         st.rerun()
-      if st.button("Simulate to My Turn"):
+      if st.button("⚡ Sim to My Turn"):
         while True:
           r, _, t_idx = get_current_turn()
           if r is None or t_idx == st.session_state.user_team_idx:
@@ -287,21 +327,20 @@ else:
 
 st.markdown("---")
 
-# --- TABS FOR LAYOUT ---
+# --- MAIN TABS ---
 tab_avail, tab_board, tab_rosters = st.tabs(
-    ["Available Players", "Draft Board", "Team Rosters"]
+    ["📋 Available Rankings (150)", "📊 Visual Draft Board", "👥 Team Rosters"]
 )
 
 with tab_avail:
-  st.subheader("Available Player Pool")
+  st.subheader("FantasyPros Superflex Top 150 - Live Pool")
 
-  # Filter controls
-  col_f1, col_f2 = st.columns(2)
-  with col_f1:
+  f_col1, f_col2 = st.columns(2)
+  with f_col1:
     pos_filter = st.selectbox(
         "Filter Position", ["ALL", "QB", "RB", "WR", "TE"]
     )
-  with col_f2:
+  with f_col2:
     search_query = st.text_input("Search Player Name", "")
 
   available_players = [
@@ -316,19 +355,28 @@ with tab_avail:
         if search_query.lower() in p["name"].lower()
     ]
 
-  for p in available_players[:30]:  # Show top 30 filtered results for speed
-    col_p1, col_p2, col_p3, col_p4 = st.columns([1, 4, 1, 2])
-    col_p1.text(f"#{p['id']}")
-    col_p2.text(f"{p['name']} ({p['pos']} - {p['team']})")
-    with col_p3:
-      if st.button("Draft", key=f"draft_{p['id']}"):
+  # Table header
+  h1, h2, h3, h4 = st.columns([1, 4, 1, 2])
+  h1.markdown("**Rank**")
+  h2.markdown("**Player (Pos - Team)**")
+  h3.markdown("**Action**")
+  h4.markdown("---")
+
+  for p in available_players[:40]:  # Paginate/limit view for maximum performance
+    cp1, cp2, cp3, cp4 = st.columns([1, 4, 1, 2])
+    cp1.markdown(f"`#{p['id']}`")
+    cp2.markdown(f"**{p['name']}** `({p['pos']} - {p['team']})`")
+    with cp3:
+      if st.button("Draft", key=f"draft_btn_{p['id']}"):
         draft_player(p["id"], st.session_state.user_team_idx)
         st.rerun()
-    col_p4.markdown("---")
+    cp4.markdown("---")
 
 with tab_board:
-  st.subheader("Visual Draft Board Grid")
+  st.subheader("Visual Draft Board Grid (Snake Draft)")
+
   for r in range(1, TOTAL_ROUNDS + 1):
+    st.markdown(f"**Round {r}**")
     row_cols = st.columns(NUM_TEAMS)
     for t_idx in range(NUM_TEAMS):
       if r % 2 == 1:
@@ -336,22 +384,54 @@ with tab_board:
       else:
         pick_num = (r - 1) * NUM_TEAMS + (NUM_TEAMS - t_idx)
 
-      cell_text = f"**R{r} T{t_idx+1}**\n\n-"
+      cell_player_name = "-"
+      cell_pos = ""
       for p in st.session_state.players:
         if p["drafted_by"] == t_idx and p.get("pick_num") == pick_num:
-          cell_text = f"**{p['name']}**\n`{p['pos']}`"
+          cell_player_name = p["name"]
+          cell_pos = p["pos"]
           break
+
+      team_short_name = st.session_state.team_names[t_idx][:10]
       with row_cols[t_idx]:
-        st.info(cell_text)
+        if cell_player_name != "-":
+          st.markdown(
+              f"<div"
+              " style='background-color:#1e293b;border:1px solid"
+              " #3b82f6;border-radius:6px;padding:6px;text-align:center;font-size:11px;min-height:60px;'><span"
+              f" style='color:#94a3b8;'>{pick_num}.</span><br><b>{cell_player_name}</b><br><span"
+              f" style='color:#38bdf8;'>{cell_pos}</span></div>",
+              unsafe_allow_html=True,
+          )
+        else:
+          st.markdown(
+              f"<div"
+              " style='background-color:#0f172a;border:1px solid"
+              " #1e293b;border-radius:6px;padding:6px;text-align:center;font-size:11px;min-height:60px;'><span"
+              f" style='color:#475569;'>{pick_num}.</span><br><span"
+              f" style='color:#64748b;'>{team_short_name}</span></div>",
+              unsafe_allow_html=True,
+          )
+    st.markdown("")
 
 with tab_rosters:
-  st.subheader("Current Team Rosters")
+  st.subheader("League Rosters Overview")
+  cols = st.columns(2)
   for t_idx in range(NUM_TEAMS):
-    team_label = st.session_state.team_names[t_idx]
-    roster_list = st.session_state.rosters[t_idx]
-    roster_str = (
-        ", ".join([f"{p['name']} ({p['pos']})" for p in roster_list])
-        if roster_list
-        else "Empty"
-    )
-    st.write(f"**{team_label}**: {roster_str}")
+    col_idx = t_idx % 2
+    with cols[col_idx]:
+      team_label = st.session_state.team_names[t_idx]
+      roster_list = st.session_state.rosters[t_idx]
+      st.markdown(f"### {team_label}")
+      if roster_list:
+        roster_display = " | ".join(
+            [f"{p['name']} ({p['pos']})" for p in roster_list]
+        )
+        st.info(roster_display)
+      else:
+        st.markdown(
+            "<span style='color:#64748b;'>Empty Roster</span>",
+            unsafe_allow_html=True,
+        )
+      st.markdown("---")
+          
