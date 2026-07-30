@@ -1,26 +1,38 @@
+
 import random
 import time
 import pandas as pd
 import streamlit as st
 
-# Page Configuration
+# Page Configuration for Mobile Responsiveness
 st.set_page_config(
-    page_title="Superflex Draft Assistant Pro", page_icon="🏈", layout="wide"
+    page_title="Superflex Draft Assistant Pro", page_icon="🏈", layout="centered"
 )
 
-# Custom CSS for Position Color Coding & Visual Polish
+# Custom CSS for Mobile Optimization, Position Color Coding & UI Polish
 st.markdown(
     """
     <style>
+    /* General Mobile Padding & Scaling */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 4px;
+        overflow-x: auto;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #1e293b;
         border-radius: 6px;
         color: #f8fafc;
-        padding: 10px 20px;
+        padding: 8px 12px;
         font-weight: 600;
+        font-size: 0.85rem;
     }
     .stTabs [aria-selected="true"] {
         background-color: #3b82f6 !important;
@@ -28,10 +40,19 @@ st.markdown(
     }
     
     /* Position Badge Styles */
-    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #3b82f6; }
-    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #10b981; }
-    .badge-wr { background-color: #78350f; color: #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #f59e0b; }
-    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #a855f7; }
+    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #3b82f6; }
+    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #10b981; }
+    .badge-wr { background-color: #78350f; color: #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #f59e0b; }
+    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #a855f7; }
+
+    /* Mobile Player Card */
+    .mobile-card {
+        background-color: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+    }
     </style>
 """,
     unsafe_allow_html=True,
@@ -74,7 +95,7 @@ st.sidebar.subheader("🤖 Simulation & Auto-Draft")
 auto_draft_enabled = st.sidebar.toggle(
     "Enable Auto-Draft Automation",
     value=False,
-    help="When turned on, the app automatically runs simulated picks for opposing teams round-by-round.",
+    help="When turned on, the app automatically runs simulated picks for opposing teams.",
 )
 auto_speed = st.sidebar.slider(
     "Auto-Draft Speed (seconds)", 0.5, 3.0, 1.0, 0.5
@@ -94,7 +115,7 @@ def get_position_badge(pos):
     return f"<span>{pos}</span>"
 
 
-# Enhanced 150-Player Database with Draft Sharks metrics (Tier, ADP, Proj Points, 3D Value)
+# Enhanced 150-Player Database with Draft Sharks metrics
 @st.cache_data
 def load_150_players():
     base_players = [
@@ -416,7 +437,7 @@ def load_150_players():
 df_players = load_150_players()
 
 # App Header
-st.title(f"🏈 Superflex Draft Assistant: {team_name}")
+st.title(f"🏈 Superflex Draft: {team_name}")
 
 
 # Snake draft calculation
@@ -438,25 +459,27 @@ round_n, current_slot, is_user_turn = get_current_picker(
     current_pick, user_draft_slot, league_size
 )
 
-# Top Status Indicator Bar
-status_col1, status_col2, status_col3 = st.columns(3)
-status_col1.metric("Current Overall Pick", f"#{current_pick}")
-status_col2.metric("Draft Round", f"Round {round_n}")
+# Top Status Indicator Bar (Optimized for Mobile Stacking)
+sc1, sc2 = st.columns(2)
+sc1.metric("Current Overall Pick", f"#{current_pick}")
+sc2.metric("Draft Round", f"Round {round_n}")
 
 if is_user_turn:
-    status_col3.markdown(
-        f"### 🟢 **YOUR TURN!** (Pick {user_draft_slot})"
+    st.markdown(
+        "<div style='background-color: #064e3b; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 10px; border: 1px solid #10b981;'><strong>🟢 YOUR TURN TO PICK!</strong></div>",
+        unsafe_allow_html=True,
     )
 else:
-    status_col3.markdown(
-        f"### ⏳ **AI Picking:** Team Slot {current_slot}"
+    st.markdown(
+        f"<div style='background-color: #1e293b; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 10px; border: 1px solid #334155;'>⏳ AI Picking: Team Slot {current_slot}</div>",
+        unsafe_allow_html=True,
     )
 
 st.markdown("---")
 
 # --- MAIN SCREEN TABS ---
 tab_draft, tab_board, tab_roster, tab_log = st.tabs(
-    ["🎯 Draft Room", "🏟️ Full Draft Board", "📋 My Roster", "🤖 AI Auto-Draft Log"]
+    ["🎯 Draft", "🏟️ Board", "📋 Roster", "🤖 Log"]
 )
 
 
@@ -485,7 +508,7 @@ def draft_player(p_obj, is_user_pick=True):
             r["BN"].append(p_obj)
     else:
         st.session_state.auto_draft_history.append(
-            f"Round {round_n} (Pick {current_pick}) - AI Team {current_slot} drafted: **{p_obj['name']}** ({p_obj['pos']} - {p_obj['team']})"
+            f"Rd {round_n} (Pick {current_pick}) - Team {current_slot}: **{p_obj['name']}** ({p_obj['pos']})"
         )
 
 
@@ -503,171 +526,167 @@ if auto_draft_enabled and not is_user_turn and current_pick <= 150:
 
 # --- TAB 1: DRAFT ROOM ---
 with tab_draft:
-    col_left, col_right = st.columns([2, 1])
+    st.subheader("Player Pool")
 
-    with col_right:
-        st.subheader("💡 FantasyPros Expert Tip Box")
+    f1, f2 = st.columns(2)
+    with f1:
+        search_q = st.text_input("Search", placeholder="Name/Team")
+    with f2:
+        pos_f = st.selectbox("Pos", ["ALL", "QB", "RB", "WR", "TE"])
 
-        qbs_total = len(st.session_state.roster["QB"]) + len(
-            st.session_state.roster["SUPERFLEX"]
-        )
-        rbs_total = len(st.session_state.roster["RB"])
-        wrs_total = len(st.session_state.roster["WR"])
-        tes_total = len(st.session_state.roster["TE"])
-
-        strengths = []
-        weaknesses = []
-
-        if qbs_total >= 2:
-            strengths.append(
-                "🟢 **QB Depth:** Secured 2+ starting signal callers for Superflex."
-            )
-        else:
-            weaknesses.append(
-                "🔴 **QB Scarcity Warning:** Superflex requires solid starting QB depth early."
-            )
-
-        if rbs_total + wrs_total >= 4:
-            strengths.append("🟢 **Skill Floor:** Solid depth at RB/WR.")
-        else:
-            weaknesses.append(
-                "🔴 **Flex Vulnerability:** Target high-volume starters for flex."
-            )
-
-        if tes_total > 0:
-            strengths.append(
-                "🟢 **TE Locked:** Reliable weekly starter secured."
-            )
-        else:
-            weaknesses.append(
-                "🟡 **TE Value Watch:** Keep an eye on elite difference-makers."
-            )
-
-        with st.expander("📊 Live Roster Strengths & Weaknesses", expanded=True):
-            st.markdown("**Strengths:**")
-            if strengths:
-                for s in strengths:
-                    st.markdown(s)
-            else:
-                st.caption(
-                    "Draft more players to build positional strengths."
-                )
-
-            st.markdown("**Weaknesses & Areas to Target:**")
-            if weaknesses:
-                for w in weaknesses:
-                    st.markdown(w)
-            else:
-                st.caption("No critical weaknesses flagged yet.")
-
-        st.markdown("---")
-        st.subheader("⭐ My Wishlist Queue")
-        if not st.session_state.queue_ids:
-            st.caption("No players queued.")
-        else:
-            queued_df = df_players[
-                df_players["id"].isin(st.session_state.queue_ids)
-                & ~df_players["id"].isin(st.session_state.drafted_ids)
-            ]
-            for _, qrow in queued_df.iterrows():
-                qc1, qc2 = st.columns([3, 1])
-                pos_badge = get_position_badge(qrow["pos"])
-                qc1.markdown(
-                    f"{pos_badge} **{qrow['name']}** ({qrow['team']})<br><small style='color:#94a3b8;'>{qrow['tier']} | Proj: {qrow['proj_pts']} pts</small>",
-                    unsafe_allow_html=True,
-                )
-                if qc2.button("Remove", key=f"unq_{qrow['id']}"):
-                    st.session_state.queue_ids.remove(qrow["id"])
-                    st.rerun()
-
-    with col_left:
-        st.subheader("Available Player Pool (Draft Sharks Metrics)")
-
-        f1, f2 = st.columns(2)
-        with f1:
-            search_q = st.text_input(
-                "Search Player / Team", placeholder="e.g. Josh Allen, BUF"
-            )
-        with f2:
-            pos_f = st.selectbox(
-                "Filter Position", ["ALL", "QB", "RB", "WR", "TE"]
-            )
-
-        filtered = df_players[
-            ~df_players["id"].isin(st.session_state.drafted_ids)
+    filtered = df_players[~df_players["id"].isin(st.session_state.drafted_ids)]
+    if pos_f != "ALL":
+        filtered = filtered[filtered["pos"] == pos_f]
+    if search_q:
+        filtered = filtered[
+            filtered["name"].str.lower().contains(search_q.lower())
+            | filtered["team"].str.lower().contains(search_q.lower())
         ]
-        if pos_f != "ALL":
-            filtered = filtered[filtered["pos"] == pos_f]
-        if search_q:
-            filtered = filtered[
-                filtered["name"].str.lower().contains(search_q.lower())
-                | filtered["team"].str.lower().contains(search_q.lower())
-            ]
 
-        for _, row in filtered.head(25).iterrows():
-            with st.container():
-                rc1, rc2, rc3, rc4, rc5, rc6 = st.columns(
-                    [1, 2.5, 1, 2.2, 1.2, 1.2]
-                )
-                rc1.markdown(
-                    f"<span style='color: #94a3b8; font-weight:600;'>#{row['id']}</span>",
-                    unsafe_allow_html=True,
-                )
-                rc2.markdown(
-                    f"**{row['name']}**<br><small style='color: #cbd5e1;'>{row['team']} • Bye {row['bye']}</small>",
-                    unsafe_allow_html=True,
-                )
-                rc3.markdown(
-                    get_position_badge(row["pos"]), unsafe_allow_html=True
-                )
+    for _, row in filtered.head(20).iterrows():
+        pos_badge = get_position_badge(row["pos"])
+        in_q = row["id"] in st.session_state.queue_ids
 
-                # Draft Sharks Info Display
-                rc4.markdown(
-                    f"<small><b>{row['tier']}</b> | ADP: {row['adp']}<br>Proj: <b>{row['proj_pts']} pts</b> | 3D Val: <b>{row['val_3d']}</b></small>",
-                    unsafe_allow_html=True,
-                )
+        st.markdown(
+            f"""
+            <div class="mobile-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div>#{row['id']} {pos_badge} <b>{row['name']}</b> <span style="color: #94a3b8; font-size: 0.8rem;">({row['team']} • Bye {row['bye']})</span></div>
+                </div>
+                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 6px;">
+                    <b>{row['tier']}</b> | ADP: {row['adp']} | Proj: <b style="color:#38bdf8;">{row['proj_pts']} pts</b> | 3D: {row['val_3d']}
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
 
-                in_q = row["id"] in st.session_state.queue_ids
-                if rc5.button(
-                    "📌 Queue" if not in_q else "Unqueue", key=f"q_{row['id']}"
-                ):
-                    if in_q:
-                        st.session_state.queue_ids.remove(row["id"])
-                    else:
-                        st.session_state.queue_ids.add(row["id"])
-                    st.rerun()
-
-                if rc6.button("Draft", key=f"d_{row['id']}"):
-                    draft_player(row.to_dict(), is_user_pick=True)
-                    st.rerun()
-                st.markdown(
-                    "<hr style='margin: 4px 0px; border-color: #1e293b;'>",
-                    unsafe_allow_html=True,
-                )
+        bcol1, bcol2 = st.columns(2)
+        with bcol1:
+            if st.button(
+                "📌 Queue" if not in_q else "Unqueue", key=f"q_{row['id']}"
+            ):
+                if in_q:
+                    st.session_state.queue_ids.remove(row["id"])
+                else:
+                    st.session_state.queue_ids.add(row["id"])
+                st.rerun()
+        with bcol2:
+            if st.button("🏈 Draft", key=f"d_{row['id']}"):
+                draft_player(row.to_dict(), is_user_pick=True)
+                st.rerun()
+        st.markdown(
+            "<hr style='margin: 4px 0px 12px 0px; border-color: #1e293b;'>",
+            unsafe_allow_html=True,
+        )
 
 
 # --- TAB 2: FULL DRAFT BOARD ---
 with tab_board:
-    st.subheader("🏟️ Comprehensive 150-Player Draft Board")
-    cols_per_row = 5
+    st.subheader("Draft Board")
     all_rows = df_players.to_dict("records")
 
-    for i in range(0, len(all_rows), cols_per_row):
-        cols = st.columns(cols_per_row)
-        for idx, col in enumerate(cols):
-            if i + idx < len(all_rows):
-                p = all_rows[i + idx]
-                is_drafted = p["id"] in st.session_state.drafted_ids
+    for p in all_rows:
+        is_drafted = p["id"] in st.session_state.drafted_ids
+        status_text = "❌ Drafted" if is_drafted else "🟢 Available"
+        card_opacity = "opacity: 0.4;" if is_drafted else ""
+        pos_badge = get_position_badge(p["pos"])
 
-                if is_drafted:
-                    card_style = "background-color: #0f172a; color: #475569; border: 1px solid #1e293b;"
-                    status_text = "❌ DRAFTED"
-                else:
-                    if p["pos"] == "QB":
-                        card_style = "background-color: #0f172a; border: 1px solid #1e3a8a; color: #f8fafc;"
-                    elif p["pos"] == "RB":
-                        card_style = "background-color: #0f172a; border: 1px solid #064e3b; color: #f8fafc;"
-                    elif p["pos"] == "WR":
-                        card_style = "background-color: #0f172a; border: 1px solid #78350f; color: #f8fafc;"
-                    else:
-                        card_style = "background-color: #0f172a; border: 1px solid #581c87; color:
+        st.markdown(
+            f"""
+            <div class="mobile-card" style="{card_opacity}">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <small style="color: #94a3b8;">#{p['id']}</small>
+                    {pos_badge}
+                    <small style="font-weight: bold;">{status_text}</small>
+                </div>
+                <div style="font-weight: bold; font-size: 0.95rem; margin-top:2px;">{p['name']} ({p['team']})</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">{p['tier']} • ADP {p['adp']} • Proj {p['proj_pts']} pts</div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+
+# --- TAB 3: MY ROSTER ---
+with tab_roster:
+    st.subheader(f"Roster: {team_name}")
+
+    slots_config = [
+        ("QB", "QB", 0),
+        ("RB", "RB 1", 0),
+        ("RB", "RB 2", 1),
+        ("WR", "WR 1", 0),
+        ("WR", "WR 2", 1),
+        ("TE", "TE", 0),
+        ("FLEX", "FLEX", 0),
+        ("SUPERFLEX", "SUPERFLEX", 0),
+    ]
+
+    for cat, label, idx in slots_config:
+        assigned = (
+            st.session_state.roster[cat][idx]
+            if len(st.session_state.roster[cat]) > idx
+            else None
+        )
+        if assigned:
+            badge = get_position_badge(assigned["pos"])
+            st.markdown(
+                f"""
+                <div class="mobile-card" style="border-left: 4px solid #3b82f6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div><b>{label}:</b> {assigned['name']} ({assigned['team']})</div>
+                        {badge}
+                    </div>
+                    <small style="color: #94a3b8;">Bye: Wk {assigned['bye']} | {assigned['tier']} | {assigned['proj_pts']} pts</small>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f"""
+                <div class="mobile-card" style="border: 1px dashed #334155; color: #64748b;">
+                    <b>{label}:</b> — Empty —
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("### Bench")
+    if not st.session_state.roster["BN"]:
+        st.caption("No bench players yet.")
+    else:
+        for bp in st.session_state.roster["BN"]:
+            badge = get_position_badge(bp["pos"])
+            st.markdown(
+                f"• {badge} **{bp['name']}** ({bp['team']} - Bye {bp['bye']})",
+                unsafe_allow_html=True,
+            )
+
+
+# --- TAB 4: AUTO-DRAFT LOG ---
+with tab_log:
+    st.subheader("Simulation Activity Log")
+
+    if not st.session_state.auto_draft_history:
+        st.info("No auto-draft actions recorded.")
+    else:
+        for log in reversed(st.session_state.auto_draft_history):
+            st.markdown(
+                f"<div class='mobile-card'><small>{log}</small></div>",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("---")
+    if st.button("Reset Entire Draft"):
+        st.session_state.drafted_ids = set()
+        st.session_state.queue_ids = set()
+        st.session_state.auto_draft_history = []
+        st.session_state.roster = {
+            "QB": [],
+            "RB": [],
+            "WR": [],
+            "TE": [],
+            "FLEX": [],
+         
