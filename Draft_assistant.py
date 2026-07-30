@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 
@@ -110,6 +111,61 @@ DEFAULT_PLAYERS = [
     {"Rank": 48, "Name": "Kenneth Walker III", "Pos": "RB", "Team": "KC", "Tier": 6},
     {"Rank": 49, "Name": "Tua Tagovailoa", "Pos": "QB", "Team": "MIA", "Tier": 6},
     {"Rank": 50, "Name": "Geno Smith", "Pos": "QB", "Team": "SEA", "Tier": 6},
+    # Tier 7
+    {"Rank": 51, "Name": "Rashee Rice", "Pos": "WR", "Team": "KC", "Tier": 7},
+    {"Rank": 52, "Name": "George Pickens", "Pos": "WR", "Team": "DAL", "Tier": 7},
+    {"Rank": 53, "Name": "Omarion Hampton", "Pos": "RB", "Team": "LAC", "Tier": 7},
+    {"Rank": 54, "Name": "Chase Brown", "Pos": "RB", "Team": "CIN", "Tier": 7},
+    {"Rank": 55, "Name": "Marvin Harrison Jr.", "Pos": "WR", "Team": "ARI", "Tier": 7},
+    {"Rank": 56, "Name": "Xavier Worthy", "Pos": "WR", "Team": "KC", "Tier": 7},
+    {"Rank": 57, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 7},
+    {"Rank": 58, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7},
+    {"Rank": 59, "Name": "Michael Penix Jr.", "Pos": "QB", "Team": "ATL", "Tier": 7},
+    {"Rank": 60, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 7},
+    # Tier 8
+    {"Rank": 61, "Name": "Colston Loveland", "Pos": "TE", "Team": "CHI", "Tier": 8},
+    {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
+    {"Rank": 63, "Name": "Devonta Smith", "Pos": "WR", "Team": "PHI", "Tier": 8},
+    {"Rank": 64, "Name": "DK Metcalf", "Pos": "WR", "Team": "SEA", "Tier": 8},
+    {"Rank": 65, "Name": "Terry McLaurin", "Pos": "WAS", "Team": "WAS", "Tier": 8},
+    {"Rank": 66, "Name": "Rhamondre Stevenson", "Pos": "RB", "Team": "NE", "Tier": 8},
+    {"Rank": 67, "Name": "Chuba Hubbard", "Pos": "RB", "Team": "CAR", "Tier": 8},
+    {"Rank": 68, "Name": "Anthony Richardson", "Pos": "QB", "Team": "IND", "Tier": 8},
+    {"Rank": 69, "Name": "Deshaun Watson", "Pos": "QB", "Team": "CLE", "Tier": 8},
+    {"Rank": 70, "Name": "J.J. McCarthy", "Pos": "QB", "Team": "MIN", "Tier": 8},
+    # Tier 9
+    {"Rank": 71, "Name": "James Conner", "Pos": "RB", "Team": "ARI", "Tier": 9},
+    {"Rank": 72, "Name": "Tony Pollard", "Pos": "RB", "Team": "TEN", "Tier": 9},
+    {"Rank": 73, "Name": "Aaron Jones", "Pos": "RB", "Team": "MIN", "Tier": 9},
+    {"Rank": 74, "Name": "DJ Moore", "Pos": "WR", "Team": "CHI", "Tier": 9},
+    {"Rank": 75, "Name": "Jaylen Waddle", "Pos": "WR", "Team": "MIA", "Tier": 9},
+    {"Rank": 76, "Name": "Chris Olave", "Pos": "WR", "Team": "NO", "Tier": 9},
+    {"Rank": 77, "Name": "Zay Flowers", "Pos": "WR", "Team": "BAL", "Tier": 9},
+    {"Rank": 78, "Name": "Tyler Warren", "Pos": "TE", "Team": "IND", "Tier": 9},
+    {"Rank": 79, "Name": "Sam LaPorta", "Pos": "TE", "Team": "DET", "Tier": 9},
+    {"Rank": 80, "Name": "Matthew Stafford", "Pos": "QB", "Team": "LAR", "Tier": 9},
+    # Tier 10
+    {"Rank": 81, "Name": "Javonte Williams", "Pos": "RB", "Team": "DEN", "Tier": 10},
+    {"Rank": 82, "Name": "Rachaad White", "Pos": "RB", "Team": "TB", "Tier": 10},
+    {"Rank": 83, "Name": "D'Andre Swift", "Pos": "RB", "Team": "CHI", "Tier": 10},
+    {"Rank": 84, "Name": "Tank Dell", "Pos": "WR", "Team": "HOU", "Tier": 10},
+    {"Rank": 85, "Name": "Keon Coleman", "Pos": "WR", "Team": "BUF", "Tier": 10},
+    {"Rank": 86, "Name": "Rome Odunze", "Pos": "WR", "Team": "CHI", "Tier": 10},
+    {"Rank": 87, "Name": "Calvin Ridley", "Pos": "WR", "Team": "TEN", "Tier": 10},
+    {"Rank": 88, "Name": "Harold Fannin Jr.", "Pos": "TE", "Team": "CLE", "Tier": 10},
+    {"Rank": 89, "Name": "Kyle Pitts Sr.", "Pos": "TE", "Team": "ATL", "Tier": 10},
+    {"Rank": 90, "Name": "Aaron Rodgers", "Pos": "QB", "Team": "NYJ", "Tier": 10},
+    # Tier 11
+    {"Rank": 91, "Name": "Najee Harris", "Pos": "RB", "Team": "PIT", "Tier": 11},
+    {"Rank": 92, "Name": "Brian Robinson Jr.", "Pos": "RB", "Team": "WAS", "Tier": 11},
+    {"Rank": 93, "Name": "Zach Charbonnet", "Pos": "RB", "Team": "SEA", "Tier": 11},
+    {"Rank": 94, "Name": "Christian Kirk", "Pos": "WR", "Team": "JAC", "Tier": 11},
+    {"Rank": 95, "Name": "DeMario Douglas", "Pos": "WR", "Team": "NE", "Tier": 11},
+    {"Rank": 96, "Name": "Jerry Jeudy", "Pos": "WR", "Team": "CLE", "Tier": 11},
+    {"Rank": 97, "Name": "Dalton Kincaid", "Pos": "TE", "Team": "BUF", "Tier": 11},
+    {"Rank": 98, "Name": "Travis Kelce", "Pos": "TE", "Team": "KC", "Tier": 11},
+    {"Rank": 99, "Name": "Russell Wilson", "Pos": "QB", "Team": "PIT", "Tier": 11},
+    {"Rank": 100, "Name": "Will Levis", "Pos": "QB", "Team": "TEN", "Tier": 11},
 ]
 
 ROSTER_TARGETS = {'QB': 2, 'RB': 2, 'WR': 3, 'TE': 1}
@@ -291,7 +347,6 @@ with tab_cheat:
             s_cols = st.columns(len(suggestions))
             for idx, (_, s_player) in enumerate(suggestions.iterrows()):
                 with s_cols[idx]:
-                    # Clean Streamlit container wrapper guarantees buttons stay visible!
                     with st.container(border=True):
                         st.markdown(f"<span class='badge-{s_player['Pos'].lower()}'>{s_player['Pos']}</span> **{s_player['Name']}** ({s_player['Team']})", unsafe_allow_html=True)
                         st.caption(f"Rank #{s_player['Rank']} | Tier {s_player['Tier']}")
@@ -322,100 +377,4 @@ with tab_cheat:
     if search_query:
         df = df[df['Name'].str.lower().str.contains(search_query) | df['Team'].str.lower().str.contains(search_query)]
 
-    st.write(f"Showing **{len(df)}** players")
-    
-    # Table headers
-    h_rank, h_name, h_pos, h_team, h_act1, h_act2 = st.columns([1, 3, 1, 1, 2, 2])
-    h_rank.markdown("**Rank**")
-    h_name.markdown("**Player**")
-    h_pos.markdown("**Pos**")
-    h_team.markdown("**Team**")
-    h_act1.markdown("**Draft Action**")
-    h_act2.markdown("**Direct Action**")
-    st.divider()
-    
-    # Player Rows
-    for idx, row in df.iterrows():
-        c_rank, c_name, c_pos, c_team, c_act1, c_act2 = st.columns([1, 3, 1, 1, 2, 2])
-        
-        c_rank.write(f"#{row['Rank']}")
-        c_name.write(f"**{row['Name']}**")
-        c_pos.markdown(f"<span class='badge-{row['Pos'].lower()}'>{row['Pos']}</span>", unsafe_allow_html=True)
-        c_team.write(f"{row['Team']}")
-        
-        if not row['Drafted']:
-            if current_pick <= max_picks:
-                if c_act1.button(f"Draft → Team {on_the_clock}", key=f"otc_{idx}", use_container_width=True):
-                    draft_player(idx, on_the_clock)
-                    st.rerun()
-                if on_the_clock != st.session_state.user_team_num:
-                    if c_act2.button("Draft → MY Team", key=f"my_{idx}", use_container_width=True):
-                        draft_player(idx, st.session_state.user_team_num)
-                        st.rerun()
-        else:
-            pick_val = int(row['Pick_Num']) if pd.notnull(row['Pick_Num']) else "?"
-            c_act1.write(f"✅ Team {row['Drafted_By']} (Pick #{pick_val})")
-
-# -----------------------------------------------------------------------------
-# TAB 2: VISUAL DRAFT BOARD
-# -----------------------------------------------------------------------------
-with tab_board:
-    st.subheader("Interactive Draft Grid")
-    
-    num_teams = st.session_state.num_teams
-    num_rounds = st.session_state.num_rounds
-    
-    drafted_players = st.session_state.players_df[st.session_state.players_df['Drafted'] == True].copy()
-    if not drafted_players.empty:
-        drafted_players['Pick_Num'] = drafted_players['Pick_Num'].astype(int)
-    
-    board_cols = st.columns(num_teams)
-    for t_idx, col in enumerate(board_cols, start=1):
-        label = f"Team {t_idx}"
-        if t_idx == st.session_state.user_team_num:
-            label += " (YOU)"
-        col.markdown(f"**{label}**")
-
-    for r in range(1, num_rounds + 1):
-        r_cols = st.columns(num_teams)
-        for t in range(1, num_teams + 1):
-            if r % 2 == 1:
-                p_num = (r - 1) * num_teams + t
-            else:
-                p_num = (r - 1) * num_teams + (num_teams - t + 1)
-            
-            match = drafted_players[drafted_players['Pick_Num'] == p_num]
-            
-            with r_cols[t-1]:
-                if not match.empty:
-                    player_data = match.iloc[0]
-                    p_name = str(player_data['Name'])
-                    p_pos = str(player_data['Pos'])
-                    p_team = str(player_data['Team'])
-                    pos_class = f"draft-card-{p_pos.lower()}"
-                    
-                    card_html = f"""
-                    <div class="draft-card {pos_class}">
-                        <b>{p_name}</b><br/>
-                        <small>{p_pos} - {p_team} (#{p_num})</small>
-                    </div>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
-                else:
-                    card_html = f'<div class="draft-card draft-card-empty"><small>#{p_num}</small></div>'
-                    st.markdown(card_html, unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# TAB 3: TEAM ROSTERS & BREAKDOWN
-# -----------------------------------------------------------------------------
-with tab_rosters:
-    st.subheader("Team Rosters & Positional Needs")
-    
-    selected_team_num = st.selectbox(
-        "Select Team",
-        options=list(range(1, st.session_state.num_teams + 1)),
-        format_func=lambda x: f"Team {x}" + (" (YOU)" if x == st.session_state.user_team_num else "")
-    )
-    
-    team_roster = st.session_state.players_df[
-        st.session_state.pl
+    st.write(f"Showing **{len(df)}** pl
