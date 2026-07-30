@@ -440,7 +440,8 @@ class DraftApp:
         bg_col = "#3c3c3c"
         for p in self.players:
           if p["drafted_by"] == t and p.get("pick_num") == pick_num:
-            player_name = f"{p['name']} ({p['pos'])"
+           player_name = f"{p['name']} ({p['pos']})"
+              
             if p["pos"] == "QB":
               bg_col = "#264f78"
             elif p["pos"] == "RB":
