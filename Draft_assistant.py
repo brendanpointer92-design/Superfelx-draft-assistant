@@ -1,8 +1,13 @@
 import random
-import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
+import streamlit as st
 
-# --- FANTASYPROS SUPERFLEX 150 PLAYER DATA (Standard Scoring) ---
+# --- PAGE CONFIGURATION ---
+st.set_page_config(
+    page_title="Superflex Draft Assistant (10-Man Standard)",
+    page_layout="wide",
+)
+
+# --- FANTASYPROS SUPERFLEX 150 PLAYER DATA ---
 RAW_PLAYERS = [
     ("Josh Allen", "BUF", "QB"),
     ("Lamar Jackson", "BAL", "QB"),
@@ -89,7 +94,7 @@ RAW_PLAYERS = [
     ("Nick Chubb", "CLE", "RB"),
     ("Austin Ekeler", "WAS", "RB"),
     ("Najee Harris", "PIT", "RB"),
-    ("Jaylen Warren", "PIN", "RB"),
+    ("Jaylen Warren", "PIT", "RB"),
     ("David Montgomery", "DET", "RB"),
     ("Travis Etienne Jr.", "JAC", "RB"),
     ("Braelon Allen", "NYJ", "RB"),
@@ -157,442 +162,197 @@ RAW_PLAYERS = [
     ("Deneric Prince", "KC", "RB"),
 ]
 
+# --- INITIALIZE SESSION STATE ---
+NUM_TEAMS = 10
+TOTAL_ROUNDS = 15
 
-class DraftApp:
+if "initialized" not in st.session_state:
+  st.session_state.initialized = True
+  st.session_state.current_pick = 1
+  st.session_state.user_team_idx = 0
+  st.session_state.team_names = [f"Team {i+1}" for i in range(NUM_TEAMS)]
+  st.session_state.team_names[0] = "My Team"
+  st.session_state.rosters = {i: [] for i in range(NUM_TEAMS)}
 
-  def __init__(self, root):
-    self.root = root
-    self.root.title("Superflex Draft Assistant (10-Man Standard)")
-    self.root.geometry("1400x850")
-    self.root.configure(bg="#1e1e1e")
+  # Initialize player pool
+  st.session_state.players = []
+  for idx, (name, team, pos) in enumerate(RAW_PLAYERS[:150]):
+    st.session_state.players.append({
+        "id": idx + 1,
+        "name": name,
+        "team": team,
+        "pos": pos,
+        "drafted": False,
+        "drafted_by": None,
+        "pick_num": None,
+    })
 
-    # League Settings
-    self.num_teams = 10
-    self.total_rounds = 15
-    self.user_team_idx = 0  # Default User is Team 1
-    self.current_pick = 1
 
-    # Initialize Teams & Names
-    self.team_names = [f"Team {i+1}" for i in range(self.num_teams)]
-    self.team_names[0] = "My Team"
-    self.rosters = {i: [] for i in range(self.num_teams)}
+def get_current_turn():
+  if st.session_state.current_pick > NUM_TEAMS * TOTAL_ROUNDS:
+    return None, None, None
+  round_num = (st.session_state.current_pick - 1) // NUM_TEAMS + 1
+  index_in_round = (st.session_state.current_pick - 1) % NUM_TEAMS
+  if round_num % 2 == 1:
+    team_idx = index_in_round
+  else:
+    team_idx = NUM_TEAMS - 1 - index_in_round
+  return round_num, index_in_round + 1, team_idx
 
-    # Initialize Player Pool
-    self.players = []
-    for idx, (name, team, pos) in enumerate(RAW_PLAYERS[:150]):
-      self.players.append(
-          {
-              "id": idx + 1,
-              "name": name,
-              "team": team,
-              "pos": pos,
-              "drafted": False,
-              "drafted_by": None,
-          }
+
+def draft_player(player_id, team_idx):
+  for p in st.session_state.players:
+    if p["id"] == player_id and not p["drafted"]:
+      p["drafted"] = True
+      p["drafted_by"] = team_idx
+      p["pick_num"] = st.session_state.current_pick
+      st.session_state.rosters[team_idx].append(p)
+      st.session_state.current_pick += 1
+      return True
+  return False
+
+
+def simulate_pick():
+  round_num, _, team_idx = get_current_turn()
+  if round_num is None:
+    return
+  available = [p for p in st.session_state.players if not p["drafted"]]
+  if not available:
+    return
+
+  chosen = available[0]
+  if round_num <= 3:
+    qbs = [p for p in available if p["pos"] == "QB"]
+    if qbs and random.random() < 0.7:
+      chosen = qbs[0]
+
+  draft_player(chosen["id"], team_idx)
+
+
+# --- SIDEBAR CONFIGURATION ---
+st.sidebar.header("League Configuration")
+user_slot = st.sidebar.selectbox(
+    "Your Draft Slot",
+    options=list(range(1, NUM_TEAMS + 1)),
+    index=st.session_state.user_team_idx,
+)
+st.session_state.user_team_idx = user_slot - 1
+
+st.sidebar.markdown("---")
+st.sidebar.header("Team Management")
+new_my_name = st.sidebar.text_input(
+    "Rename My Team", st.session_state.team_names[st.session_state.user_team_idx]
+)
+if new_my_name:
+  st.session_state.team_names[st.session_state.user_team_idx] = new_my_name
+
+if st.sidebar.button("Reset Draft"):
+  for key in list(st.session_state.keys()):
+    del st.session_state[key]
+  st.rerun()
+
+# --- MAIN DASHBOARD HEADER ---
+round_num, pick_in_round, active_team_idx = get_current_turn()
+
+if round_num is None:
+  st.success("Draft Completed!")
+else:
+  active_team_name = st.session_state.team_names[active_team_idx]
+  is_user_turn = active_team_idx == st.session_state.user_team_idx
+
+  col_h1, col_h2 = st.columns([3, 1])
+  with col_h1:
+    if is_user_turn:
+      st.markdown(
+          f"### 🟢 **YOUR TURN!** (Round {round_num}, Pick {pick_in_round} /"
+          f" Overall {st.session_state.current_pick})"
       )
-
-    self.setup_styles()
-    self.create_widgets()
-    self.update_display()
-
-  def setup_styles(self):
-    style = ttk.Style()
-    style.theme_use("clam")
-    style.configure(
-        "Treeview",
-        background="#2d2d2d",
-        foreground="white",
-        fieldbackground="#2d2d2d",
-        rowheight=24,
-    )
-    style.map("Treeview", background=[("selected", "#007acc")])
-
-  def create_widgets(self):
-    # Top Control Bar
-    top_frame = tk.Frame(self.root, bg="#252526", height=60)
-    top_frame.pack(fill="x", side="top")
-
-    self.status_label = tk.Label(
-        top_frame,
-        text="",
-        font=("Arial", 14, "bold"),
-        bg="#252526",
-        fg="#4ec9b0",
-    )
-    self.status_label.pack(side="left", padx=20, pady=15)
-
-    btn_config = {
-        "font": ("Arial", 10, "bold"),
-        "bg": "#007acc",
-        "fg": "white",
-        "bd": 0,
-        "padx": 10,
-        "pady": 5,
-    }
-
-    tk.Button(
-        top_frame,
-        text="Draft Selected",
-        command=self.user_draft_player,
-        **btn_config,
-    ).pack(side="left", padx=10)
-    tk.Button(
-        top_frame,
-        text="Auto-Draft Pick",
-        command=self.simulate_single_pick,
-        bg="#68217a",
-        **btn_config,
-    ).pack(side="left", padx=5)
-    tk.Button(
-        top_frame,
-        text="Auto-Draft to My Turn",
-        command=self.auto_draft_to_user,
-        bg="#b5cea8",
-        fg="black",
-        **btn_config,
-    ).pack(side="left", padx=5)
-    tk.Button(
-        top_frame,
-        text="Rename Teams",
-        command=self.rename_teams_dialog,
-        bg="#333333",
-        **btn_config,
-    ).pack(side="right", padx=20)
-
-    # Main Content Panes (Left: Available Players, Right: Tabs for Draft Board & Rosters)
-    main_paned = tk.PanedWindow(
-        self.root, orient=tk.HORIZONTAL, bg="#1e1e1e", sashwidth=6
-    )
-    main_paned.pack(fill="both", expand=True, padx=10, pady=10)
-
-    # Left Frame: Available Players
-    left_frame = tk.Frame(main_paned, bg="#2d2d2d")
-    main_paned.add(left_frame, width=550)
-
-    tk.Label(
-        left_frame,
-        text="Available Players (FantasyPros Superflex)",
-        font=("Arial", 12, "bold"),
-        bg="#2d2d2d",
-        fg="white",
-    ).pack(anchor="w", padx=10, pady=10)
-
-    # Player Treeview
-    columns = ("rk", "name", "pos", "team")
-    self.player_tree = ttk.Treeview(
-        left_frame, columns=columns, show="headings", selectmode="browse"
-    )
-    self.player_tree.heading("rk", text="Rk")
-    self.player_tree.heading("name", text="Player Name")
-    self.player_tree.heading("pos", text="Pos")
-    self.player_tree.heading("team", text="Team")
-
-    self.player_tree.column("rk", width=40, anchor="center")
-    self.player_tree.column("name", width=220, anchor="w")
-    self.player_tree.column("pos", width=60, anchor="center")
-    self.player_tree.column("team", width=60, anchor="center")
-
-    scrollbar = ttk.Scrollbar(
-        left_frame, orient="vertical", command=self.player_tree.yview
-    )
-    self.player_tree.configure(yscrollcommand=scrollbar.set)
-
-    self.player_tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-    scrollbar.pack(side="right", fill="y", pady=5)
-
-    # Right Frame: Notebook (Draft Board & Rosters)
-    right_frame = tk.Frame(main_paned, bg="#1e1e1e")
-    main_paned.add(right_frame, width=800)
-
-    self.notebook = ttk.Notebook(right_frame)
-    self.notebook.pack(fill="both", expand=True)
-
-    # Tab 1: Draft Board Grid
-    self.board_frame = tk.Frame(self.notebook, bg="#2d2d2d")
-    self.notebook.add(self.board_frame, text="Visual Draft Board")
-
-    self.board_canvas = tk.Canvas(self.board_frame, bg="#2d2d2d", highlightthickness=0)
-    board_scroll = ttk.Scrollbar(
-        self.board_frame, orient="vertical", command=self.board_canvas.yview
-    )
-    board_xscroll = ttk.Scrollbar(
-        self.board_frame, orient="horizontal", command=self.board_canvas.xview
-    )
-    self.board_canvas.configure(
-        yscrollcommand=board_scroll.set, xscrollcommand=board_xscroll.set
-    )
-
-    board_scroll.pack(side="right", fill="y")
-    board_xscroll.pack(side="bottom", fill="x")
-    self.board_canvas.pack(side="left", fill="both", expand=True)
-
-    self.board_inner_frame = tk.Frame(self.board_canvas, bg="#2d2d2d")
-    self.board_canvas.create_window(
-        (0, 0), window=self.board_inner_frame, anchor="nw"
-    )
-    self.board_inner_frame.bind(
-        "<Configure>",
-        lambda e: self.board_canvas.configure(
-            scrollregion=self.board_canvas.bbox("all")
-        ),
-    )
-
-    # Tab 2: Roster View
-    self.roster_frame = tk.Frame(self.notebook, bg="#2d2d2d")
-    self.notebook.add(self.roster_frame, text="Team Rosters")
-
-    self.roster_tree = ttk.Treeview(
-        self.roster_frame, columns=("team", "pos_roster"), show="headings"
-    )
-    self.roster_tree.heading("team", text="Team")
-    self.roster_tree.heading("pos_roster", text="Drafted Roster")
-    self.roster_tree.column("team", width=150, anchor="w")
-    self.roster_tree.column("pos_roster", width=600, anchor="w")
-    self.roster_tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-  def get_current_turn_info(self):
-    if self.current_pick > self.num_teams * self.total_rounds:
-      return None, None, None
-
-    round_num = (self.current_pick - 1) // self.num_teams + 1
-    index_in_round = (self.current_pick - 1) % self.num_teams
-
-    # Snake draft logic
-    if round_num % 2 == 1:
-      team_idx = index_in_round
     else:
-      team_idx = self.num_teams - 1 - index_in_round
-
-    return round_num, index_in_round + 1, team_idx
-
-  def update_display(self):
-    # Update Player Tree
-    for row in self.player_tree.get_children():
-      self.player_tree.delete(row)
-
-    for p in self.players:
-      if not p["drafted"]:
-        self.player_tree.insert(
-            "",
-            "end",
-            iid=str(p["id"]),
-            values=(p["id"], p["name"], p["pos"], p["team"]),
-        )
-
-    # Update Status Banner
-    round_num, pick_in_round, team_idx = self.get_current_turn_info()
-    if round_num is None:
-      self.status_label.config(text="DRAFT COMPLETED!", fg="#ce9178")
-    else:
-      active_team = self.team_names[team_idx]
-      turn_text = (
-          f"Round {round_num}, Pick {pick_in_round} (Overall {self.current_pick})"
-          f" — On the Clock: {active_team}"
+      st.markdown(
+          f"### ⏳ On the Clock: **{active_team_name}** (Round {round_num}, Pick"
+          f" {pick_in_round} / Overall {st.session_state.current_pick})"
       )
-      self.status_label.config(
-          text=turn_text, fg="#4ec9b0" if team_idx == self.user_team_idx else "white"
-      )
-
-    self.draw_draft_board()
-    self.update_roster_view()
-
-  def draw_draft_board(self):
-    for widget in self.board_inner_frame.winfo_children():
-      widget.destroy()
-
-    # Headers (Teams)
-    for t_idx in range(self.num_teams):
-      lbl = tk.Label(
-          self.board_inner_frame,
-          text=self.team_names[t_idx],
-          font=("Arial", 9, "bold"),
-          bg="#333333",
-          fg="white",
-          width=16,
-          relief="ridge",
-          padx=2,
-          pady=4,
-      )
-      lbl.grid(row=0, column=t_idx, padx=1, pady=1)
-
-    # Grid Cells (Rounds)
-    for r in range(1, self.total_rounds + 1):
-      # Round Label
-      r_lbl = tk.Label(
-          self.board_inner_frame,
-          text=f"R{r}",
-          font=("Arial", 8),
-          bg="#252526",
-          fg="#aaaaaa",
-          width=4,
-      )
-      r_lbl.grid(row=r, column=self.num_teams, padx=2, pady=1)
-
-      for t in range(self.num_teams):
-        # Determine pick number for this grid slot
-        if r % 2 == 1:
-          pick_num = (r - 1) * self.num_teams + t + 1
-        else:
-          pick_num = (r - 1) * self.num_teams + (self.num_teams - t)
-
-        # Find player drafted here
-        player_name = ""
-        bg_col = "#3c3c3c"
-        for p in self.players:
-          if p["drafted_by"] == t and p.get("pick_num") == pick_num:
-            player_name = f"{p['name']} ({p['pos']})"
-            if p["pos"] == "QB":
-              bg_col = "#264f78"
-            elif p["pos"] == "RB":
-              bg_col = "#2d5a27"
-            elif p["pos"] == "WR":
-              bg_col = "#5a4a27"
-            elif p["pos"] == "TE":
-              bg_col = "#5a274e"
+  with col_h2:
+    if not is_user_turn:
+      if st.button("Simulate Pick"):
+        simulate_pick()
+        st.rerun()
+      if st.button("Simulate to My Turn"):
+        while True:
+          r, _, t_idx = get_current_turn()
+          if r is None or t_idx == st.session_state.user_team_idx:
             break
+          simulate_pick()
+        st.rerun()
 
-        cell = tk.Label(
-            self.board_inner_frame,
-            text=player_name,
-            font=("Arial", 8),
-            bg=bg_col,
-            fg="white",
-            width=16,
-            height=2,
-            relief="sunken",
-            wraplength=100,
-        )
-        cell.grid(row=r, column=t, padx=1, pady=1)
+st.markdown("---")
 
-  def update_roster_view(self):
-    for row in self.roster_tree.get_children():
-      self.roster_tree.delete(row)
+# --- TABS FOR LAYOUT ---
+tab_avail, tab_board, tab_rosters = st.tabs(
+    ["Available Players", "Draft Board", "Team Rosters"]
+)
 
-    for t_idx in range(self.num_teams):
-      roster_str = ", ".join(
-          [f"{p['name']} ({p['pos']})" for p in self.rosters[t_idx]]
-      )
-      self.roster_tree.insert(
-          "", "end", values=(self.team_names[t_idx], roster_str)
-      )
+with tab_avail:
+  st.subheader("Available Player Pool")
 
-  def draft_player_action(self, player_id, team_idx):
-    for p in self.players:
-      if p["id"] == player_id and not p["drafted"]:
-        p["drafted"] = True
-        p["drafted_by"] = team_idx
-        p["pick_num"] = self.current_pick
-        self.rosters[team_idx].append(p)
-        self.current_pick += 1
-        return True
-    return False
+  # Filter controls
+  col_f1, col_f2 = st.columns(2)
+  with col_f1:
+    pos_filter = st.selectbox(
+        "Filter Position", ["ALL", "QB", "RB", "WR", "TE"]
+    )
+  with col_f2:
+    search_query = st.text_input("Search Player Name", "")
 
-  def user_draft_player(self):
-    round_num, _, team_idx = self.get_current_turn_info()
-    if round_num is None:
-      messagebox.showinfo("Draft Over", "The draft has concluded!")
-      return
+  available_players = [
+      p for p in st.session_state.players if not p["drafted"]
+  ]
+  if pos_filter != "ALL":
+    available_players = [p for p in available_players if p["pos"] == pos_filter]
+  if search_query:
+    available_players = [
+        p
+        for p in available_players
+        if search_query.lower() in p["name"].lower()
+    ]
 
-    if team_idx != self.user_team_idx:
-      if (
-          not messagebox.askyesno(
-              "Out of Turn",
-              f"It is currently {self.team_names[team_idx]}'s turn. Draft"
-              " anyway for your team?",
-          )
-          == True
-      ):
-        return
+  for p in available_players[:30]:  # Show top 30 filtered results for speed
+    col_p1, col_p2, col_p3, col_p4 = st.columns([1, 4, 1, 2])
+    col_p1.text(f"#{p['id']}")
+    col_p2.text(f"{p['name']} ({p['pos']} - {p['team']})")
+    with col_p3:
+      if st.button("Draft", key=f"draft_{p['id']}"):
+        draft_player(p["id"], st.session_state.user_team_idx)
+        st.rerun()
+    col_p4.markdown("---")
 
-    selected = self.player_tree.selection()
-    if not selected:
-      messagebox.showwarning(
-          "Selection Error", "Please select an available player from the list."
-      )
-      return
+with tab_board:
+  st.subheader("Visual Draft Board Grid")
+  # Render a simple text/markdown grid representation for the web
+  for r in range(1, TOTAL_ROUNDS + 1):
+    row_cols = st.columns(NUM_TEAMS)
+    for t_idx in range(NUM_TEAMS):
+      if r % 2 == 1:
+        pick_num = (r - 1) * NUM_TEAMS + t_idx + 1
+      else:
+        pick_num = (r - 1) * NUM_TEAMS + (NUM_TEAMS - t_idx)
 
-    player_id = int(selected[0])
-    self.draft_player_action(player_id, self.user_team_idx)
-    self.update_display()
+      cell_text = f"**R{r} T{t_idx+1}**\n\n-"
+      for p in st.session_state.players:
+        if p["drafted_by"] == t_idx and p.get("pick_num") == pick_num:
+          cell_text = f"**{p['name']}**\n`{p['pos']}`"
+          break
+      with row_cols[t_idx]:
+        st.info(cell_text)
 
-  def simulate_single_pick(self):
-    round_num, _, team_idx = self.get_current_turn_info()
-    if round_num is None:
-      return
-
-    # AI Logic: Pick highest available player based on positional needs/value
-    available = [p for p in self.players if not p["drafted"]]
-    if not available:
-      return
-
-    # Simple smart heuristic for CPU: favor QBs early in Superflex, else best available ranking
-    chosen_player = available[0]
-    if round_num <= 3:
-      qbs = [p for p in available if p["pos"] == "QB"]
-      if qbs and random.random() < 0.7:
-        chosen_player = qbs[0]
-
-    self.draft_player_action(chosen_player["id"], team_idx)
-    self.update_display()
-
-  def auto_draft_to_user(self):
-    round_num, _, team_idx = self.get_current_turn_info()
-    if round_num is None:
-      return
-
-    # Simulate picks until it hits user turn or draft ends
-    while team_idx is not None and team_idx != self.user_team_idx:
-      self.simulate_single_pick()
-      round_num, _, team_idx = self.get_current_turn_info()
-
-    self.update_display()
-
-  def rename_teams_dialog(self):
-    popup = tk.Toplevel(self.root)
-    popup.title("Rename Teams")
-    popup.geometry("350x450")
-    popup.configure(bg="#2d2d2d")
-
-    tk.Label(
-        popup,
-        text="Customize Franchise Names",
-        font=("Arial", 11, "bold"),
-        bg="#2d2d2d",
-        fg="white",
-    ).pack(pady=10)
-
-    entries = []
-    for i in range(self.num_teams):
-      f = tk.Frame(popup, bg="#2d2d2d")
-      f.pack(fill="x", padx=20, pady=2)
-      tk.Label(
-          f, text=f"Team {i+1}:", width=10, anchor="w", bg="#2d2d2d", fg="white"
-      ).pack(side="left")
-      ent = tk.Entry(f, width=20)
-      ent.insert(0, self.team_names[i])
-      ent.pack(side="right")
-      entries.append(ent)
-
-    def save_names():
-      for i, ent in enumerate(entries):
-        val = ent.get().strip()
-        if val:
-          self.team_names[i] = val
-      popup.destroy()
-      self.update_display()
-
-    tk.Button(
-        popup,
-        text="Save Names",
-        command=save_names,
-        bg="#007acc",
-        fg="white",
-        font=("Arial", 10, "bold"),
-    ).pack(pady=15)
-
-
-if __name__ == "__main__":
-  root = tk.Tk()
-  app = DraftApp(root)
-  root.mainloop()
-    
+with tab_rosters:
+  st.subheader("Current Team Rosters")
+  for t_idx in range(NUM_TEAMS):
+    team_label = st.session_state.team_names[t_idx]
+    roster_list = st.session_state.rosters[t_idx]
+    roster_str = (
+        ", ".join([f"{p['name']} ({p['pos']})" for p in roster_list])
+        if roster_list
+        else "Empty"
+    )
+    st.write(f"**{team_label}**: {roster_str}")
