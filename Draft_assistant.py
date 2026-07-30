@@ -9,14 +9,14 @@ st.set_page_config(
 
 st.title("🏈 10-Team NFL Superflex Draft Assistant (Standard Scoring)")
 st.caption(
-    "Live draft tracker tailored for 10-Team Superflex formats using Standard (Non-PPR) FantasyPros Consensus Rankings."
+    "Live draft tracker using FantasyPros Superflex Consensus Rankings adjusted for Standard (Non-PPR) Scoring."
 )
 
 # ---------------------------------------------------------
-# FANTASYPROS CONSENSUS SUPERFLEX TOP 100 (STANDARD SCORING)
+# FANTASYPROS CONSENSUS SUPERFLEX CHEAT SHEET TOP 100 (STANDARD)
 # ---------------------------------------------------------
 DEFAULT_PLAYERS = [
-    # TIER 1 - Elite QBs & Tier-1 Workhorse RBs
+    # Tier 1
     {
         "Rank": 1,
         "Name": "Josh Allen",
@@ -43,19 +43,19 @@ DEFAULT_PLAYERS = [
     },
     {
         "Rank": 4,
-        "Name": "Joe Burrow",
-        "Pos": "QB",
-        "Team": "CIN",
-        "Tier": 1,
-        "Bye": 6,
-    },
-    {
-        "Rank": 5,
         "Name": "Jayden Daniels",
         "Pos": "QB",
         "Team": "WAS",
         "Tier": 1,
         "Bye": 7,
+    },
+    {
+        "Rank": 5,
+        "Name": "Joe Burrow",
+        "Pos": "QB",
+        "Team": "CIN",
+        "Tier": 1,
+        "Bye": 6,
     },
     {
         "Rank": 6,
@@ -67,19 +67,19 @@ DEFAULT_PLAYERS = [
     },
     {
         "Rank": 7,
-        "Name": "Bijan Robinson",
-        "Pos": "RB",
-        "Team": "ATL",
-        "Tier": 1,
-        "Bye": 11,
-    },
-    {
-        "Rank": 8,
         "Name": "Jahmyr Gibbs",
         "Pos": "RB",
         "Team": "DET",
         "Tier": 1,
         "Bye": 6,
+    },
+    {
+        "Rank": 8,
+        "Name": "Bijan Robinson",
+        "Pos": "RB",
+        "Team": "ATL",
+        "Tier": 1,
+        "Bye": 11,
     },
     {
         "Rank": 9,
@@ -91,31 +91,23 @@ DEFAULT_PLAYERS = [
     },
     {
         "Rank": 10,
-        "Name": "Justin Herbert",
-        "Pos": "QB",
-        "Team": "LAC",
-        "Tier": 1,
-        "Bye": 7,
-    },
-    # TIER 2 - Core Starting QBs & Top Skill Players
-    {
-        "Rank": 11,
         "Name": "Caleb Williams",
         "Pos": "QB",
         "Team": "CHI",
-        "Tier": 2,
+        "Tier": 1,
         "Bye": 10,
+    },
+    # Tier 2
+    {
+        "Rank": 11,
+        "Name": "Justin Herbert",
+        "Pos": "QB",
+        "Team": "LAC",
+        "Tier": 2,
+        "Bye": 7,
     },
     {
         "Rank": 12,
-        "Name": "Christian McCaffrey",
-        "Pos": "RB",
-        "Team": "SF",
-        "Tier": 2,
-        "Bye": 8,
-    },
-    {
-        "Rank": 13,
         "Name": "Puka Nacua",
         "Pos": "WR",
         "Team": "LAR",
@@ -123,15 +115,15 @@ DEFAULT_PLAYERS = [
         "Bye": 11,
     },
     {
-        "Rank": 14,
-        "Name": "Jaxon Smith-Njigba",
-        "Pos": "WR",
-        "Team": "SEA",
+        "Rank": 13,
+        "Name": "Christian McCaffrey",
+        "Pos": "RB",
+        "Team": "SF",
         "Tier": 2,
-        "Bye": 11,
+        "Bye": 8,
     },
     {
-        "Rank": 15,
+        "Rank": 14,
         "Name": "Trevor Lawrence",
         "Pos": "QB",
         "Team": "JAC",
@@ -139,12 +131,20 @@ DEFAULT_PLAYERS = [
         "Bye": 7,
     },
     {
-        "Rank": 16,
+        "Rank": 15,
         "Name": "Dak Prescott",
         "Pos": "QB",
         "Team": "DAL",
         "Tier": 2,
         "Bye": 14,
+    },
+    {
+        "Rank": 16,
+        "Name": "Jaxon Smith-Njigba",
+        "Pos": "WR",
+        "Team": "SEA",
+        "Tier": 2,
+        "Bye": 11,
     },
     {
         "Rank": 17,
@@ -164,36 +164,36 @@ DEFAULT_PLAYERS = [
     },
     {
         "Rank": 19,
-        "Name": "CeeDee Lamb",
-        "Pos": "WR",
-        "Team": "DAL",
-        "Tier": 2,
-        "Bye": 14,
-    },
-    {
-        "Rank": 20,
-        "Name": "Jaxson Dart",
-        "Pos": "QB",
-        "Team": "NYG",
-        "Tier": 2,
-        "Bye": 12,
-    },
-    # TIER 3 - Strong QB2s & High-Touch Workhorse RBs
-    {
-        "Rank": 21,
         "Name": "Brock Purdy",
         "Pos": "QB",
         "Team": "SF",
-        "Tier": 3,
+        "Tier": 2,
         "Bye": 8,
     },
     {
-        "Rank": 22,
-        "Name": "Justin Jefferson",
-        "Pos": "WR",
-        "Team": "MIN",
+        "Rank": 20,
+        "Name": "Ashton Jeanty",
+        "Pos": "RB",
+        "Team": "LV",
+        "Tier": 2,
+        "Bye": 13,
+    },
+    # Tier 3
+    {
+        "Rank": 21,
+        "Name": "Jaxson Dart",
+        "Pos": "QB",
+        "Team": "NYG",
         "Tier": 3,
-        "Bye": 6,
+        "Bye": 12,
+    },
+    {
+        "Rank": 22,
+        "Name": "CeeDee Lamb",
+        "Pos": "WR",
+        "Team": "DAL",
+        "Tier": 3,
+        "Bye": 14,
     },
     {
         "Rank": 23,
@@ -205,14 +205,6 @@ DEFAULT_PLAYERS = [
     },
     {
         "Rank": 24,
-        "Name": "Bo Nix",
-        "Pos": "QB",
-        "Team": "DEN",
-        "Tier": 3,
-        "Bye": 14,
-    },
-    {
-        "Rank": 25,
         "Name": "Patrick Mahomes II",
         "Pos": "QB",
         "Team": "KC",
@@ -220,12 +212,20 @@ DEFAULT_PLAYERS = [
         "Bye": 10,
     },
     {
-        "Rank": 26,
-        "Name": "Ashton Jeanty",
-        "Pos": "RB",
-        "Team": "LV",
+        "Rank": 25,
+        "Name": "Justin Jefferson",
+        "Pos": "WR",
+        "Team": "MIN",
         "Tier": 3,
-        "Bye": 13,
+        "Bye": 6,
+    },
+    {
+        "Rank": 26,
+        "Name": "Bo Nix",
+        "Pos": "QB",
+        "Team": "DEN",
+        "Tier": 3,
+        "Bye": 14,
     },
     {
         "Rank": 27,
@@ -259,7 +259,7 @@ DEFAULT_PLAYERS = [
         "Tier": 3,
         "Bye": 10,
     },
-    # TIER 4 - Standard Value RBs & Primary Wideouts
+    # Tier 4
     {
         "Rank": 31,
         "Name": "Breece Hall",
@@ -340,7 +340,7 @@ DEFAULT_PLAYERS = [
         "Tier": 4,
         "Bye": 14,
     },
-    # TIER 5 - Tier-2 QBs & Mid-Round Standard Weapons
+    # Tier 5
     {
         "Rank": 41,
         "Name": "Kyler Murray",
@@ -421,7 +421,7 @@ DEFAULT_PLAYERS = [
         "Tier": 5,
         "Bye": 10,
     },
-    # TIER 6 - High-TD Potential Skill & QB Targets
+    # Tier 6
     {
         "Rank": 51,
         "Name": "Chuba Hubbard",
@@ -502,7 +502,7 @@ DEFAULT_PLAYERS = [
         "Tier": 6,
         "Bye": 10,
     },
-    # TIER 7 - Core WR2/RB2 Depth & Superflex QBs
+    # Tier 7
     {
         "Rank": 61,
         "Name": "Tee Higgins",
@@ -583,7 +583,7 @@ DEFAULT_PLAYERS = [
         "Tier": 7,
         "Bye": 7,
     },
-    # TIER 8 - Flex Play Options & High upside QBs
+    # Tier 8
     {
         "Rank": 71,
         "Name": "Bryce Young",
@@ -664,7 +664,7 @@ DEFAULT_PLAYERS = [
         "Tier": 8,
         "Bye": 10,
     },
-    # TIER 9 - Standard Bench RBs & Solid WR Targets
+    # Tier 9
     {
         "Rank": 81,
         "Name": "Jonathon Brooks",
@@ -745,7 +745,7 @@ DEFAULT_PLAYERS = [
         "Tier": 9,
         "Bye": 7,
     },
-    # TIER 10 - Late Round Upside & QB3 Targets
+    # Tier 10
     {
         "Rank": 91,
         "Name": "David Njoku",
@@ -847,7 +847,7 @@ if "my_roster" not in st.session_state:
     st.session_state.my_roster = []
 
 # --- Sidebar Draft Controls ---
-st.sidebar.header("Draft Controls")
+st.sidebar.header("Draft Settings")
 pick_number = st.sidebar.number_input(
     "Current Overall Pick", min_value=1, max_value=160, value=1
 )
