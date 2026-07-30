@@ -14,13 +14,11 @@ st.set_page_config(
 # Custom CSS for modern UI, color-coded position badges, and draft board grid
 st.markdown("""
 <style>
-    /* Dark Theme Custom Adjustments */
     .stApp {
         background-color: #0e1117;
         color: #e0e0e0;
     }
     
-    /* Position Badge Colors */
     .badge-qb { background-color: #e63946; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-rb { background-color: #2a9d8f; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-wr { background-color: #457b9d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
@@ -28,7 +26,6 @@ st.markdown("""
     .badge-dst { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-k { background-color: #d62828; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     
-    /* Draft Board Cell Styling */
     .draft-card {
         border: 1px solid #30363d;
         border-radius: 6px;
@@ -37,6 +34,7 @@ st.markdown("""
         font-size: 0.85rem;
         background-color: #161b22;
         text-align: center;
+        min-height: 52px;
     }
     .draft-card-qb { border-left: 4px solid #e63946; }
     .draft-card-rb { border-left: 4px solid #2a9d8f; }
@@ -46,9 +44,8 @@ st.markdown("""
     .draft-card-k { border-left: 4px solid #d62828; }
     .draft-card-empty { border: 1px dashed #484f58; background-color: transparent; color: #6e7681; }
 
-    /* Custom Metric Styling */
     div[data-testid="stMetricValue"] {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -174,10 +171,11 @@ DEFAULT_PLAYERS = [
 # 3. SESSION STATE INITIALIZATION
 # -----------------------------------------------------------------------------
 if 'players_df' not in st.session_state:
-    st.session_state.players_df = pd.DataFrame(DEFAULT_PLAYERS)
-    st.session_state.players_df['Drafted'] = False
-    st.session_state.players_df['Drafted_By'] = None
-    st.session_state.players_df['Pick_Num'] = None
+    df_init = pd.DataFrame(DEFAULT_PLAYERS)
+    df_init['Drafted'] = False
+    df_init['Drafted_By'] = None
+    df_init['Pick_Num'] = None
+    st.session_state.players_df = df_init
 
 if 'num_teams' not in st.session_state:
     st.session_state.num_teams = 12
@@ -192,13 +190,13 @@ if 'current_pick' not in st.session_state:
     st.session_state.current_pick = 1
 
 if 'draft_history' not in st.session_state:
-    st.session_state.draft_history = []  # To track pick sequence for undo operations
+    st.session_state.draft_history = []
 
 # -----------------------------------------------------------------------------
 # 4. HELPER FUNCTIONS
 # -----------------------------------------------------------------------------
 def get_on_the_clock_team(pick_num, total_teams):
-    """Calculates the team number currently picking based on snake draft logic."""
+    """Calculates team number on the clock using standard snake logic."""
     round_num = (pick_num - 1) // total_teams + 1
     pick_in_round = (pick_num - 1) % total_teams + 1
     if round_num % 2 == 1:
@@ -207,30 +205,28 @@ def get_on_the_clock_team(pick_num, total_teams):
         return total_teams - pick_in_round + 1
 
 def draft_player(player_index, team_num):
-    """Drafts a player and advances the draft clock."""
-    st.session_state.players_df.at[player_index, 'Drafted'] = True
-    st.session_state.players_df.at[player_index, 'Drafted_By'] = f"Team {team_num}"
-    st.session_state.players_df.at[player_index, 'Pick_Num'] = st.session_state.current_pick
+    """Assigns a player to a team and advances the draft."""
+    st.session_state.players_df.loc[player_index, 'Drafted'] = True
+    st.session_state.players_df.loc[player_index, 'Drafted_By'] = int(team_num)
+    st.session_state.players_df.loc[player_index, 'Pick_Num'] = int(st.session_state.current_pick)
     
     st.session_state.draft_history.append((player_index, st.session_state.current_pick))
     st.session_state.current_pick += 1
 
 def undo_last_pick():
-    """Undoes the previous pick."""
+    """Undoes the last pick."""
     if st.session_state.draft_history:
         last_index, last_pick = st.session_state.draft_history.pop()
-        st.session_state.players_df.at[last_index, 'Drafted'] = False
-        st.session_state.players_df.at[last_index, 'Drafted_By'] = None
-        st.session_state.players_df.at[last_index, 'Pick_Num'] = None
+        st.session_state.players_df.loc[last_index, 'Drafted'] = False
+        st.session_state.players_df.loc[last_index, 'Drafted_By'] = None
+        st.session_state.players_df.loc[last_index, 'Pick_Num'] = None
         st.session_state.current_pick = last_pick
 
 def get_badge_html(pos):
-    """Returns HTML color badge based on position."""
-    pos_lower = str(pos).lower()
-    return f'<span class="badge-{pos_lower}">{pos}</span>'
+    return f'<span class="badge-{str(pos).lower()}">{pos}</span>'
 
 # -----------------------------------------------------------------------------
-# 5. SIDEBAR - LEAGUE SETTINGS & CONTROLS
+# 5. SIDEBAR CONTROLS
 # -----------------------------------------------------------------------------
 with st.sidebar:
     st.title("⚙️ League Settings")
@@ -245,36 +241,13 @@ with st.sidebar:
     
     st.divider()
     
-    # Custom Rankings File Upload
-    st.subheader("📥 Upload Custom CSV")
-    uploaded_file = st.file_uploader("Upload Rankings (Rank, Name, Pos, Team, Tier)", type=["csv"])
-    if uploaded_file is not None:
-        try:
-            custom_df = pd.read_csv(uploaded_file)
-            required_cols = {'Rank', 'Name', 'Pos', 'Team'}
-            if required_cols.issubset(custom_df.columns):
-                custom_df['Drafted'] = False
-                custom_df['Drafted_By'] = None
-                custom_df['Pick_Num'] = None
-                if 'Tier' not in custom_df.columns:
-                    custom_df['Tier'] = 1
-                st.session_state.players_df = custom_df
-                st.success("Custom rankings loaded successfully!")
-            else:
-                st.error("CSV must contain headers: Rank, Name, Pos, Team")
-        except Exception as e:
-            st.error(f"Error loading CSV: {e}")
-
-    st.divider()
-    
-    # Reset / Undo controls
     col_u1, col_u2 = st.columns(2)
     with col_u1:
-        if st.button("↩️ Undo Pick", use_container_width=True):
+        if st.button("↩️ Undo", use_container_width=True):
             undo_last_pick()
             st.rerun()
     with col_u2:
-        if st.button("🔄 Reset Draft", type="primary", use_container_width=True):
+        if st.button("🔄 Reset", type="primary", use_container_width=True):
             st.session_state.players_df['Drafted'] = False
             st.session_state.players_df['Drafted_By'] = None
             st.session_state.players_df['Pick_Num'] = None
@@ -283,7 +256,7 @@ with st.sidebar:
             st.rerun()
 
 # -----------------------------------------------------------------------------
-# 6. HEADER METRICS & ON-THE-CLOCK TRACKER
+# 6. DRAFT STATUS HEADER
 # -----------------------------------------------------------------------------
 current_pick = st.session_state.current_pick
 max_picks = st.session_state.num_teams * st.session_state.num_rounds
@@ -299,10 +272,9 @@ else:
     on_the_clock = None
     is_user_turn = False
 
-# Metric Bar
 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 with col_m1:
-    st.metric("Overall Pick", f"#{current_pick}" if current_pick <= max_picks else "Draft Complete")
+    st.metric("Overall Pick", f"#{current_pick}" if current_pick <= max_picks else "Complete")
 with col_m2:
     st.metric("Round / Pick", f"R{current_round} . P{current_pick_in_round}")
 with col_m3:
@@ -312,7 +284,7 @@ with col_m3:
     st.metric("On The Clock", clock_label)
 with col_m4:
     user_qbs = len(st.session_state.players_df[
-        (st.session_state.players_df['Drafted_By'] == f"Team {st.session_state.user_team_num}") & 
+        (st.session_state.players_df['Drafted_By'] == st.session_state.user_team_num) & 
         (st.session_state.players_df['Pos'] == 'QB')
     ])
     st.metric("Your QBs Drafted", f"{user_qbs} QBs")
@@ -336,7 +308,6 @@ with tab_cheat:
     with col_f3:
         hide_drafted = st.checkbox("Hide Drafted", value=True)
 
-    # Filter dataframe
     df = st.session_state.players_df.copy()
     if hide_drafted:
         df = df[df['Drafted'] == False]
@@ -345,11 +316,10 @@ with tab_cheat:
     if search_query:
         df = df[df['Name'].str.lower().str.contains(search_query) | df['Team'].str.lower().str.contains(search_query)]
 
-    st.subheader(f"Available Players ({len(df)})")
+    st.write(f"Showing **{len(df)}** players")
     
-    # Display table with draft buttons
     for idx, row in df.iterrows():
-        c_rank, c_name, c_pos, c_team, c_tier, c_action1, c_action2 = st.columns([1, 3, 1, 1, 1, 2, 2])
+        c_rank, c_name, c_pos, c_team, c_tier, c_act1, c_act2 = st.columns([1, 3, 1, 1, 1, 2, 2])
         
         c_rank.write(f"**#{row['Rank']}**")
         c_name.write(f"**{row['Name']}**")
@@ -359,26 +329,107 @@ with tab_cheat:
         
         if not row['Drafted']:
             if current_pick <= max_picks:
-                # Button 1: Draft to team currently on the clock
-                if c_action1.button(f"Draft to Team {on_the_clock}", key=f"draft_otc_{idx}"):
+                if c_act1.button(f"Draft → Team {on_the_clock}", key=f"otc_{idx}"):
                     draft_player(idx, on_the_clock)
                     st.rerun()
-                
-                # Button 2: Direct draft to User's Team
                 if on_the_clock != st.session_state.user_team_num:
-                    if c_action2.button("Draft to MY Team", key=f"draft_my_{idx}"):
+                    if c_act2.button("Draft → MY Team", key=f"my_{idx}"):
                         draft_player(idx, st.session_state.user_team_num)
                         st.rerun()
         else:
-            c_action1.write(f"✅ {row['Drafted_By']} (Pick #{row['Pick_Num']})")
+            pick_val = int(row['Pick_Num']) if pd.notnull(row['Pick_Num']) else "?"
+            c_act1.write(f"✅ Team {row['Drafted_By']} (Pick #{pick_val})")
 
 # -----------------------------------------------------------------------------
 # TAB 2: VISUAL DRAFT BOARD
 # -----------------------------------------------------------------------------
 with tab_board:
-    st.subheader("Grid Draft Board")
+    st.subheader("Interactive Draft Grid")
     
     num_teams = st.session_state.num_teams
     num_rounds = st.session_state.num_rounds
     
-    # Creat
+    # Pre-filter drafted players to avoid slow re-queries inside loops
+    drafted_players = st.session_state.players_df[st.session_state.players_df['Drafted'] == True].copy()
+    if not drafted_players.empty:
+        drafted_players['Pick_Num'] = drafted_players['Pick_Num'].astype(int)
+    
+    # Headers
+    board_cols = st.columns(num_teams)
+    for t_idx, col in enumerate(board_cols, start=1):
+        label = f"Team {t_idx}"
+        if t_idx == st.session_state.user_team_num:
+            label += " (YOU)"
+        col.markdown(f"**{label}**")
+
+    # Board rows
+    for r in range(1, num_rounds + 1):
+        r_cols = st.columns(num_teams)
+        for t in range(1, num_teams + 1):
+            # Calculate overall pick number
+            if r % 2 == 1:
+                p_num = (r - 1) * num_teams + t
+            else:
+                p_num = (r - 1) * num_teams + (num_teams - t + 1)
+            
+            # Match pick
+            match = drafted_players[drafted_players['Pick_Num'] == p_num]
+            
+            with r_cols[t-1]:
+                if not match.empty:
+                    player_data = match.iloc[0]
+                    p_name = player_data['Name']
+                    p_pos = player_data['Pos']
+                    p_team = player_data['Team']
+                    pos_class = f"draft-card-{p_pos.lower()}"
+                    
+                    st.markdown(
+                        f"""<div class="draft-card {pos_class}">
+                            <b>{p_name}</b><br/>
+                            <small>{p_pos} - {p_team} (#{p_num})</small>
+                        </div>""", 
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        f"""<div class="draft-card draft-card-empty">
+                            <small>#{p_num}</small>
+                        </div>""", 
+                        unsafe_allow_html=True
+                    )
+
+# -----------------------------------------------------------------------------
+# TAB 3: TEAM ROSTERS & BREAKDOWN
+# -----------------------------------------------------------------------------
+with tab_rosters:
+    st.subheader("Team Rosters")
+    
+    selected_team_num = st.selectbox(
+        "Select Team",
+        options=list(range(1, st.session_state.num_teams + 1)),
+        format_func=lambda x: f"Team {x}" + (" (YOU)" if x == st.session_state.user_team_num else "")
+    )
+    
+    # Filter players drafted by selected team
+    team_roster = st.session_state.players_df[
+        st.session_state.players_df['Drafted_By'] == selected_team_num
+    ].copy()
+    
+    col_r1, col_r2 = st.columns([3, 2])
+    
+    with col_r1:
+        st.write(f"### Roster: Team {selected_team_num}")
+        if not team_roster.empty:
+            team_roster['Pick_Num'] = team_roster['Pick_Num'].astype(int)
+            display_roster = team_roster[['Pick_Num', 'Name', 'Pos', 'Team', 'Tier']].sort_values('Pick_Num')
+            st.dataframe(display_roster, hide_index=True, use_container_width=True)
+        else:
+            st.info("No players drafted yet for this team. Click 'Draft' on the Cheat Sheet tab to add players.")
+            
+    with col_r2:
+        st.write("### Positional Counts")
+        if not team_roster.empty:
+            pos_counts = team_roster['Pos'].value_counts()
+            st.bar_chart(pos_counts)
+        else:
+            st.info("No position breakdown available.")
