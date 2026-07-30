@@ -28,10 +28,10 @@ st.markdown(
     }
     
     /* Position Badge Styles */
-    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #3b82f6; }
-    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #10b981; }
-    .badge-wr { background-color: #78350f; color: #fde68a; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #f59e0b; }
-    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #a855f7; }
+    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #3b82f6; }
+    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #10b981; }
+    .badge-wr { background-color: #78350f; color: #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #f59e0b; }
+    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; border: 1px solid #a855f7; }
     </style>
 """,
     unsafe_allow_html=True,
@@ -94,119 +94,229 @@ def get_position_badge(pos):
     return f"<span>{pos}</span>"
 
 
-# Comprehensive 150-Player Database
+# Enhanced 150-Player Database with Draft Sharks metrics (Tier, ADP, Proj Points, 3D Value)
 @st.cache_data
 def load_150_players():
     base_players = [
-        {"id": 1, "name": "Josh Allen", "pos": "QB", "team": "BUF", "bye": 7},
-        {"id": 2, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "bye": 13},
-        {"id": 3, "name": "Drake Maye", "pos": "QB", "team": "NE", "bye": 11},
-        {"id": 4, "name": "Joe Burrow", "pos": "QB", "team": "CIN", "bye": 6},
-        {"id": 5, "name": "Jayden Daniels", "pos": "QB", "team": "WAS", "bye": 7},
-        {"id": 6, "name": "Jalen Hurts", "pos": "QB", "team": "PHI", "bye": 10},
-        {"id": 7, "name": "Bijan Robinson", "pos": "RB", "team": "ATL", "bye": 11},
-        {"id": 8, "name": "Jahmyr Gibbs", "pos": "RB", "team": "DET", "bye": 6},
-        {"id": 9, "name": "Ja'Marr Chase", "pos": "WR", "team": "CIN", "bye": 6},
-        {"id": 10, "name": "Justin Herbert", "pos": "QB", "team": "LAC", "bye": 7},
-        {"id": 11, "name": "Caleb Williams", "pos": "QB", "team": "CHI", "bye": 10},
-        {"id": 12, "name": "Puka Nacua", "pos": "WR", "team": "LAR", "bye": 11},
         {
-            "id": 13,
+            "id": 1,
+            "name": "Josh Allen",
+            "pos": "QB",
+            "team": "BUF",
+            "bye": 7,
+            "tier": "Tier 1",
+            "adp": "1.01",
+            "proj_pts": 363,
+            "val_3d": 100,
+        },
+        {
+            "id": 2,
+            "name": "Jahmyr Gibbs",
+            "pos": "RB",
+            "team": "DET",
+            "bye": 6,
+            "tier": "Tier 1",
+            "adp": "1.04",
+            "proj_pts": 273,
+            "val_3d": 75,
+        },
+        {
+            "id": 3,
+            "name": "Bijan Robinson",
+            "pos": "RB",
+            "team": "ATL",
+            "bye": 11,
+            "tier": "Tier 1",
+            "adp": "1.02",
+            "proj_pts": 274,
+            "val_3d": 73,
+        },
+        {
+            "id": 4,
+            "name": "Lamar Jackson",
+            "pos": "QB",
+            "team": "BAL",
+            "bye": 13,
+            "tier": "Tier 1",
+            "adp": "1.11",
+            "proj_pts": 328,
+            "val_3d": 72,
+        },
+        {
+            "id": 5,
+            "name": "Puka Nacua",
+            "pos": "WR",
+            "team": "LAR",
+            "bye": 11,
+            "tier": "Tier 1",
+            "adp": "1.06",
+            "proj_pts": 208,
+            "val_3d": 70,
+        },
+        {
+            "id": 6,
+            "name": "Drake Maye",
+            "pos": "QB",
+            "team": "NE",
+            "bye": 11,
+            "tier": "Tier 1",
+            "adp": "1.03",
+            "proj_pts": 315,
+            "val_3d": 68,
+        },
+        {
+            "id": 7,
+            "name": "Joe Burrow",
+            "pos": "QB",
+            "team": "CIN",
+            "bye": 6,
+            "tier": "Tier 1",
+            "adp": "1.10",
+            "proj_pts": 311,
+            "val_3d": 67,
+        },
+        {
+            "id": 8,
+            "name": "Ja'Marr Chase",
+            "pos": "WR",
+            "team": "CIN",
+            "bye": 6,
+            "tier": "Tier 1",
+            "adp": "1.05",
+            "proj_pts": 186,
+            "val_3d": 66,
+        },
+        {
+            "id": 9,
             "name": "Jaxon Smith-Njigba",
             "pos": "WR",
             "team": "SEA",
             "bye": 11,
+            "tier": "Tier 1",
+            "adp": "1.07",
+            "proj_pts": 187,
+            "val_3d": 64,
         },
         {
-            "id": 14,
-            "name": "Trevor Lawrence",
-            "pos": "QB",
-            "team": "JAC",
-            "bye": 7,
-        },
-        {"id": 15, "name": "Dak Prescott", "pos": "QB", "team": "DAL", "bye": 14},
-        {
-            "id": 16,
-            "name": "Amon-Ra St. Brown",
-            "pos": "WR",
-            "team": "DET",
-            "bye": 6,
-        },
-        {
-            "id": 17,
+            "id": 10,
             "name": "Christian McCaffrey",
             "pos": "RB",
             "team": "SF",
             "bye": 8,
+            "tier": "Tier 2",
+            "adp": "1.09",
+            "proj_pts": 241,
+            "val_3d": 63,
         },
         {
-            "id": 18,
+            "id": 11,
             "name": "Jonathan Taylor",
             "pos": "RB",
             "team": "IND",
             "bye": 13,
+            "tier": "Tier 2",
+            "adp": "1.12",
+            "proj_pts": 260,
+            "val_3d": 62,
         },
-        {"id": 19, "name": "CeeDee Lamb", "pos": "WR", "team": "DAL", "bye": 14},
-        {"id": 20, "name": "Jaxson Dart", "pos": "QB", "team": "NYG", "bye": 8},
-        {"id": 21, "name": "Brock Purdy", "pos": "QB", "team": "SF", "bye": 8},
-        {"id": 22, "name": "Justin Jefferson", "pos": "WR", "team": "MIN", "bye": 6},
-        {"id": 23, "name": "James Cook III", "pos": "RB", "team": "BUF", "bye": 7},
-        {"id": 24, "name": "Bo Nix", "pos": "QB", "team": "DEN", "bye": 10},
         {
-            "id": 25,
-            "name": "Patrick Mahomes II",
+            "id": 12,
+            "name": "Jayden Daniels",
             "pos": "QB",
-            "team": "KC",
-            "bye": 5,
+            "team": "WAS",
+            "bye": 7,
+            "tier": "Tier 2",
+            "adp": "1.08",
+            "proj_pts": 315,
+            "val_3d": 62,
         },
-        {"id": 26, "name": "Ashton Jeanty", "pos": "RB", "team": "LVR", "bye": 13},
-        {"id": 27, "name": "Drake London", "pos": "WR", "team": "ATL", "bye": 11},
         {
-            "id": 28,
-            "name": "Matthew Stafford",
+            "id": 13,
+            "name": "Jalen Hurts",
             "pos": "QB",
-            "team": "LAR",
-            "bye": 11,
+            "team": "PHI",
+            "bye": 10,
+            "tier": "Tier 2",
+            "adp": "3.01",
+            "proj_pts": 313,
+            "val_3d": 61,
         },
-        {"id": 29, "name": "A.J. Brown", "pos": "WR", "team": "NE", "bye": 11},
-        {"id": 30, "name": "De'Von Achane", "pos": "RB", "team": "MIA", "bye": 6},
-        {"id": 31, "name": "Chase Brown", "pos": "RB", "team": "CIN", "bye": 6},
-        {"id": 32, "name": "Brock Bowers", "pos": "TE", "team": "LVR", "bye": 13},
-        {"id": 33, "name": "Nico Collins", "pos": "WR", "team": "HOU", "bye": 8},
-        {"id": 34, "name": "Saquon Barkley", "pos": "RB", "team": "PHI", "bye": 10},
         {
-            "id": 35,
-            "name": "Omarion Hampton",
+            "id": 14,
+            "name": "James Cook III",
             "pos": "RB",
+            "team": "BUF",
+            "bye": 7,
+            "tier": "Tier 2",
+            "adp": "2.01",
+            "proj_pts": 232,
+            "val_3d": 61,
+        },
+        {
+            "id": 15,
+            "name": "Justin Herbert",
+            "pos": "QB",
             "team": "LAC",
             "bye": 7,
+            "tier": "Tier 2",
+            "adp": "2.03",
+            "proj_pts": 298,
+            "val_3d": 59,
         },
-        {"id": 36, "name": "Jared Goff", "pos": "QB", "team": "DET", "bye": 6},
-        {"id": 37, "name": "George Pickens", "pos": "WR", "team": "DAL", "bye": 14},
-        {"id": 38, "name": "Derrick Henry", "pos": "RB", "team": "BAL", "bye": 13},
-        {"id": 39, "name": "Kyler Murray", "pos": "QB", "team": "MIN", "bye": 6},
-        {"id": 40, "name": "Trey McBride", "pos": "TE", "team": "ARI", "bye": 14},
         {
-            "id": 41,
-            "name": "Kenneth Walker III",
-            "pos": "RB",
-            "team": "KC",
-            "bye": 5,
+            "id": 16,
+            "name": "Caleb Williams",
+            "pos": "QB",
+            "team": "CHI",
+            "bye": 10,
+            "tier": "Tier 2",
+            "adp": "2.04",
+            "proj_pts": 295,
+            "val_3d": 58,
         },
-        {"id": 42, "name": "Rashee Rice", "pos": "WR", "team": "KC", "bye": 5},
-        {"id": 43, "name": "Chris Olave", "pos": "WR", "team": "NO", "bye": 8},
-        {"id": 44, "name": "Jordan Love", "pos": "QB", "team": "GB", "bye": 11},
-        {"id": 45, "name": "Baker Mayfield", "pos": "QB", "team": "TB", "bye": 18},
-        {"id": 46, "name": "DeVonta Smith", "pos": "WR", "team": "PHI", "bye": 10},
-        {"id": 47, "name": "Tyler Shough", "pos": "QB", "team": "NO", "bye": 8},
-        {"id": 48, "name": "Tee Higgins", "pos": "WR", "team": "CIN", "bye": 6},
-        {"id": 49, "name": "Zay Flowers", "pos": "WR", "team": "BAL", "bye": 13},
         {
-            "id": 50,
-            "name": "Tetairoa McMillan",
+            "id": 17,
+            "name": "Amon-Ra St. Brown",
             "pos": "WR",
-            "team": "CAR",
-            "bye": 5,
+            "team": "DET",
+            "bye": 6,
+            "tier": "Tier 2",
+            "adp": "2.02",
+            "proj_pts": 182,
+            "val_3d": 57,
+        },
+        {
+            "id": 18,
+            "name": "Trevor Lawrence",
+            "pos": "QB",
+            "team": "JAC",
+            "bye": 7,
+            "tier": "Tier 2",
+            "adp": "2.05",
+            "proj_pts": 290,
+            "val_3d": 56,
+        },
+        {
+            "id": 19,
+            "name": "Dak Prescott",
+            "pos": "QB",
+            "team": "DAL",
+            "bye": 14,
+            "tier": "Tier 2",
+            "adp": "2.06",
+            "proj_pts": 288,
+            "val_3d": 55,
+        },
+        {
+            "id": 20,
+            "name": "CeeDee Lamb",
+            "pos": "WR",
+            "team": "DAL",
+            "bye": 14,
+            "tier": "Tier 2",
+            "adp": "2.07",
+            "proj_pts": 179,
+            "val_3d": 54,
         },
     ]
 
@@ -283,6 +393,8 @@ def load_150_players():
     while len(base_players) < 150:
         pos = random.choices(positions, weights=[33, 42, 17, 8], k=1)[0]
         name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        rnd = random.randint(3, 15)
+        pick = random.randint(1, 10)
         base_players.append(
             {
                 "id": current_id,
@@ -290,6 +402,10 @@ def load_150_players():
                 "pos": pos,
                 "team": random.choice(nfl_teams),
                 "bye": random.randint(5, 14),
+                "tier": f"Tier {random.randint(3, 5)}",
+                "adp": f"{rnd}.{pick:02d}",
+                "proj_pts": random.randint(130, 240),
+                "val_3d": max(10, 55 - (current_id // 3)),
             }
         )
         current_id += 1
@@ -424,7 +540,7 @@ with tab_draft:
             )
         else:
             weaknesses.append(
-                "🟡 **TE Value Watch:** Keep an eye on elite difference-makers like Brock Bowers or Trey McBride."
+                "🟡 **TE Value Watch:** Keep an eye on elite difference-makers."
             )
 
         with st.expander("📊 Live Roster Strengths & Weaknesses", expanded=True):
@@ -457,7 +573,7 @@ with tab_draft:
                 qc1, qc2 = st.columns([3, 1])
                 pos_badge = get_position_badge(qrow["pos"])
                 qc1.markdown(
-                    f"{pos_badge} **{qrow['name']}** ({qrow['team']})",
+                    f"{pos_badge} **{qrow['name']}** ({qrow['team']})<br><small style='color:#94a3b8;'>{qrow['tier']} | Proj: {qrow['proj_pts']} pts</small>",
                     unsafe_allow_html=True,
                 )
                 if qc2.button("Remove", key=f"unq_{qrow['id']}"):
@@ -465,7 +581,7 @@ with tab_draft:
                     st.rerun()
 
     with col_left:
-        st.subheader("Available Player Pool (Top 150)")
+        st.subheader("Available Player Pool (Draft Sharks Metrics)")
 
         f1, f2 = st.columns(2)
         with f1:
@@ -488,36 +604,46 @@ with tab_draft:
                 | filtered["team"].str.lower().contains(search_q.lower())
             ]
 
-        for _, row in filtered.head(30).iterrows():
-            rc1, rc2, rc3, rc4, rc5, rc6 = st.columns(
-                [0.8, 2.5, 1, 1.2, 1.2, 1.2]
-            )
-            rc1.markdown(
-                f"<span style='color: #94a3b8; font-weight:600;'>#{row['id']}</span>",
-                unsafe_allow_html=True,
-            )
-            rc2.markdown(f"**{row['name']}**")
-            rc3.markdown(
-                get_position_badge(row["pos"]), unsafe_allow_html=True
-            )
-            rc4.markdown(
-                f"<span style='color: #cbd5e1;'>{row['team']} (Bye {row['bye']})</span>",
-                unsafe_allow_html=True,
-            )
+        for _, row in filtered.head(25).iterrows():
+            with st.container():
+                rc1, rc2, rc3, rc4, rc5, rc6 = st.columns(
+                    [1, 2.5, 1, 2.2, 1.2, 1.2]
+                )
+                rc1.markdown(
+                    f"<span style='color: #94a3b8; font-weight:600;'>#{row['id']}</span>",
+                    unsafe_allow_html=True,
+                )
+                rc2.markdown(
+                    f"**{row['name']}**<br><small style='color: #cbd5e1;'>{row['team']} • Bye {row['bye']}</small>",
+                    unsafe_allow_html=True,
+                )
+                rc3.markdown(
+                    get_position_badge(row["pos"]), unsafe_allow_html=True
+                )
 
-            in_q = row["id"] in st.session_state.queue_ids
-            if rc5.button(
-                "📌 Queue" if not in_q else "Unqueue", key=f"q_{row['id']}"
-            ):
-                if in_q:
-                    st.session_state.queue_ids.remove(row["id"])
-                else:
-                    st.session_state.queue_ids.add(row["id"])
-                st.rerun()
+                # Draft Sharks Info Display
+                rc4.markdown(
+                    f"<small><b>{row['tier']}</b> | ADP: {row['adp']}<br>Proj: <b>{row['proj_pts']} pts</b> | 3D Val: <b>{row['val_3d']}</b></small>",
+                    unsafe_allow_html=True,
+                )
 
-            if rc6.button("Draft", key=f"d_{row['id']}"):
-                draft_player(row.to_dict(), is_user_pick=True)
-                st.rerun()
+                in_q = row["id"] in st.session_state.queue_ids
+                if rc5.button(
+                    "📌 Queue" if not in_q else "Unqueue", key=f"q_{row['id']}"
+                ):
+                    if in_q:
+                        st.session_state.queue_ids.remove(row["id"])
+                    else:
+                        st.session_state.queue_ids.add(row["id"])
+                    st.rerun()
+
+                if rc6.button("Draft", key=f"d_{row['id']}"):
+                    draft_player(row.to_dict(), is_user_pick=True)
+                    st.rerun()
+                st.markdown(
+                    "<hr style='margin: 4px 0px; border-color: #1e293b;'>",
+                    unsafe_allow_html=True,
+                )
 
 
 # --- TAB 2: FULL DRAFT BOARD ---
@@ -533,7 +659,6 @@ with tab_board:
                 p = all_rows[i + idx]
                 is_drafted = p["id"] in st.session_state.drafted_ids
 
-                # Position-specific card styling for aesthetic contrast
                 if is_drafted:
                     card_style = "background-color: #0f172a; color: #475569; border: 1px solid #1e293b;"
                     status_text = "❌ DRAFTED"
@@ -544,129 +669,5 @@ with tab_board:
                         card_style = "background-color: #0f172a; border: 1px solid #064e3b; color: #f8fafc;"
                     elif p["pos"] == "WR":
                         card_style = "background-color: #0f172a; border: 1px solid #78350f; color: #f8fafc;"
-                    else:  # TE
-                        card_style = "background-color: #0f172a; border: 1px solid #581c87; color: #f8fafc;"
-                    status_text = "🟢 Available"
-
-                pos_badge = get_position_badge(p["pos"])
-                col.markdown(
-                    f"""
-                    <div style="padding:10px; border-radius:8px; margin-bottom:10px; text-align:center; {card_style}">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <small style="color: #94a3b8;">#{p['id']}</small>
-                            {pos_badge}
-                        </div>
-                        <strong style="font-size: 0.95rem;">{p['name']}</strong><br>
-                        <small style="color: #cbd5e1;">{p['team']} • Bye {p['bye']}</small><br>
-                        <span style="font-size: 0.75rem; font-weight: bold; margin-top: 4px; display:inline-block;">{status_text}</span>
-                    </div>
-                """,
-                    unsafe_allow_html=True,
-                )
-
-
-# --- TAB 3: MY ROSTER & BYE ANALYZER ---
-with tab_roster:
-    st.subheader(f"📋 Roster Sheet for: {team_name}")
-
-    slots_config = [
-        ("QB", "Quarterback (QB)", 0),
-        ("RB", "Running Back (RB)", 0),
-        ("RB", "Running Back (RB)", 1),
-        ("WR", "Wide Receiver (WR)", 0),
-        ("WR", "Wide Receiver (WR)", 1),
-        ("TE", "Tight End (TE)", 0),
-        ("FLEX", "Flex (RB/WR/TE)", 0),
-        ("SUPERFLEX", "Superflex (QB/FLEX)", 0),
-    ]
-
-    for cat, label, idx in slots_config:
-        assigned = (
-            st.session_state.roster[cat][idx]
-            if len(st.session_state.roster[cat]) > idx
-            else None
-        )
-        if assigned:
-            badge = get_position_badge(assigned["pos"])
-            st.markdown(
-                f"""
-                <div style="background-color: #1e293b; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #3b82f6; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>{label}:</strong> {assigned['name']} ({assigned['team']} | Bye: Week {assigned['bye']})
-                    </div>
-                    <div>{badge}</div>
-                </div>
-            """,
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                f"""
-                <div style="background-color: #0f172a; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; border: 1px dashed #334155; color: #64748b;">
-                    <strong>{label}:</strong> — Empty Slot —
-                </div>
-            """,
-                unsafe_allow_html=True,
-            )
-
-    st.markdown("### Bench Reserves")
-    if not st.session_state.roster["BN"]:
-        st.caption("No bench players added yet.")
-    else:
-        for bp in st.session_state.roster["BN"]:
-            badge = get_position_badge(bp["pos"])
-            st.markdown(
-                f"• {badge} **{bp['name']}** ({bp['team']} - Bye: Week {bp['bye']})",
-                unsafe_allow_html=True,
-            )
-
-    st.markdown("---")
-    st.subheader("🛡️ Bye Week Analyzer")
-    all_starters = []
-    for cat, _, idx in slots_config:
-        if len(st.session_state.roster[cat]) > idx:
-            all_starters.append(st.session_state.roster[cat][idx])
-
-    if all_starters:
-        bye_counts = {}
-        for s in all_starters:
-            b = s["bye"]
-            bye_counts[b] = bye_counts.get(b, 0) + 1
-
-        overloaded = [week for week, count in bye_counts.items() if count >= 2]
-        if overloaded:
-            st.warning(
-                f"⚠️ **Bye Conflict Warning:** Multiple starting players on Bye during Week(s): {', '.join(map(str, overloaded))}."
-            )
-        else:
-            st.success(
-                "✅ No major starting lineup bye week conflicts detected!"
-            )
-
-
-# --- TAB 4: AI AUTO-DRAFT LOG ---
-with tab_log:
-    st.subheader("🤖 Simulated League Auto-Draft Activity")
-    st.markdown("Review picks made automatically by competing teams.")
-
-    if not st.session_state.auto_draft_history:
-        st.info("No auto-draft actions recorded yet.")
-    else:
-        for log in reversed(st.session_state.auto_draft_history):
-            st.markdown(log)
-
-    st.markdown("---")
-    if st.button("Reset Entire Draft Board & History"):
-        st.session_state.drafted_ids = set()
-        st.session_state.queue_ids = set()
-        st.session_state.auto_draft_history = []
-        st.session_state.roster = {
-            "QB": [],
-            "RB": [],
-            "WR": [],
-            "TE": [],
-            "FLEX": [],
-            "SUPERFLEX": [],
-            "BN": [],
-        }
-        st.rerun()
+                    else:
+                        card_style = "background-color: #0f172a; border: 1px solid #581c87; color:
