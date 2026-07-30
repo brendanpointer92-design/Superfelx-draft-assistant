@@ -239,7 +239,7 @@ def undo_last_pick():
         st.session_state.current_pick = last_pick
 
 def get_badge_html(pos):
-    return f'<span class="badge-{str(pos).lower()}">{pos}</span>'
+    return '<span class="badge-' + str(pos).lower() + '">' + str(pos) + '</span>'
 
 def evaluate_team_needs(team_num):
     """Evaluates positional need scores (High, Med, Low) based on current roster."""
@@ -381,10 +381,8 @@ with tab_cheat:
                 with s_cols[idx]:
                     pos_lower = str(s_player['Pos']).lower()
                     card_html = (
-                        f'<div class="rec-card">'
-                        f'<span class="badge-{pos_lower}">{s_player["Pos"]}</span> <b>{s_player["Name"]}</b> ({s_player["Team"]})<br/>'
-                        f'<small><b>Rank:</b> #{s_player["Rank"]} | <b>Tier:</b> {s_player["Tier"]}</small><br/>'
-                        f'<small style="color: #58a6ff;">{s_player["Reason"]}</small>'
-                        f'</div>'
-                    )
-                    st.markdown(card_h
+                        '<div class="rec-card">'
+                        + '<span class="badge-' + pos_lower + '">' + str(s_player['Pos']) + '</span> '
+                        + '<b>' + str(s_player['Name']) + '</b> (' + str(s_player['Team']) + ')<br/>'
+                        + '<small><b>Rank:</b> #' + str(s_player['Rank']) + ' | <b>Tier:</b> ' + str(s_player['Tier']) + '</small><br/>'
+                        + '<small style="color: #58a6ff;">' + str(s_player
