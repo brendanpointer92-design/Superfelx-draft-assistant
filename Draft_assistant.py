@@ -763,5 +763,3 @@ with tab_draft:
 
     with col_left:
         st.subheader("Available Player Pool (Top 150)")
-
-        f1, f2 = st.col
