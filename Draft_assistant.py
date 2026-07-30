@@ -1,53 +1,16 @@
 import streamlit as st
 import pandas as pd
-import requests
 import numpy as np
 
-# -----------------------------------------------------------------------------
-# 1. PAGE CONFIGURATION
-# -----------------------------------------------------------------------------
+# Page configuration
 st.set_page_config(
-    page_title="2026 Fantasy Football Elite Draft Assistant Pro",
+    page_title="Fantasy Football Draft Assistant (Superflex)",
     page_icon="🏈",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 # -----------------------------------------------------------------------------
-# 2. CUSTOM STYLING
-# -----------------------------------------------------------------------------
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #0e1117;
-        color: #e0e0e0;
-    }
-    .badge-qb { background-color: #e63946; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    .badge-rb { background-color: #2a9d8f; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    .badge-wr { background-color: #457b9d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    .badge-te { background-color: #e9c46a; color: #1d3557; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    .badge-dst { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    .badge-k { background-color: #d62828; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    
-    .draft-card {
-        border: 1px solid #30363d;
-        border-radius: 6px;
-        padding: 6px;
-        margin-bottom: 4px;
-        font-size: 0.75rem;
-        background-color: #161b22;
-        text-align: center;
-        min-height: 52px;
-    }
-    .draft-card-qb { border-left: 4px solid #e63946; }
-    .draft-card-rb { border-left: 4px solid #2a9d8f; }
-    .draft-card-wr { border-left: 4px solid #457b9d; }
-    .draft-card-te { border-left: 4px solid #e9c46a; }
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# 3. EXPANDED DEFAULT DATASET (WITH BASELINE PROJECTIONS & BYE WEEKS)
+# 1. EXPANDED DEFAULT DATASET (PLAYERS 1 TO 150)
 # -----------------------------------------------------------------------------
 DEFAULT_PLAYERS = [
     {"Rank": 1, "Name": "Josh Allen", "Pos": "QB", "Team": "BUF", "Tier": 1, "ProjPts": 395.0, "Bye": 12},
@@ -89,238 +52,187 @@ DEFAULT_PLAYERS = [
     {"Rank": 37, "Name": "Jordan Love", "Pos": "QB", "Team": "GB", "Tier": 5, "ProjPts": 290.0, "Bye": 10},
     {"Rank": 38, "Name": "A.J. Brown", "Pos": "WR", "Team": "NE", "Tier": 5, "ProjPts": 265.0, "Bye": 11},
     {"Rank": 39, "Name": "Drake London", "Pos": "WR", "Team": "ATL", "Tier": 5, "ProjPts": 255.0, "Bye": 12},
-    {"Rank": 40, "Name": "George Kittle", "Pos": "TE", "Team": "SF", "Tier": 6, "ProjPts": 200.0, "Bye": 9}
+    {"Rank": 40, "Name": "George Kittle", "Pos": "TE", "Team": "SF", "Tier": 6, "ProjPts": 200.0, "Bye": 9},
+    {"Rank": 41, "Name": "Breece Hall", "Pos": "RB", "Team": "NYJ", "Tier": 6, "ProjPts": 245.0, "Bye": 12},
+    {"Rank": 42, "Name": "Kyren Williams", "Pos": "RB", "Team": "LAR", "Tier": 6, "ProjPts": 240.0, "Bye": 6},
+    {"Rank": 43, "Name": "Travis Etienne Jr.", "Pos": "RB", "Team": "JAC", "Tier": 6, "ProjPts": 230.0, "Bye": 12},
+    {"Rank": 44, "Name": "Kenneth Walker III", "Pos": "RB", "Team": "SEA", "Tier": 6, "ProjPts": 235.0, "Bye": 10},
+    {"Rank": 45, "Name": "Garrett Wilson", "Pos": "WR", "Team": "NYJ", "Tier": 6, "ProjPts": 250.0, "Bye": 12},
+    {"Rank": 46, "Name": "Marvin Harrison Jr.", "Pos": "WR", "Team": "ARI", "Tier": 6, "ProjPts": 245.0, "Bye": 11},
+    {"Rank": 47, "Name": "Deebo Samuel Sr.", "Pos": "WR", "Team": "WAS", "Tier": 6, "ProjPts": 235.0, "Bye": 14},
+    {"Rank": 48, "Name": "Davante Adams", "Pos": "WR", "Team": "LV", "Tier": 6, "ProjPts": 225.0, "Bye": 10},
+    {"Rank": 49, "Name": "Tyreek Hill", "Pos": "WR", "Team": "MIA", "Tier": 6, "ProjPts": 260.0, "Bye": 6},
+    {"Rank": 50, "Name": "Cooper Kupp", "Pos": "WR", "Team": "LAR", "Tier": 6, "ProjPts": 215.0, "Bye": 6},
+    {"Rank": 51, "Name": "Mark Andrews", "Pos": "TE", "Team": "BAL", "Tier": 7, "ProjPts": 190.0, "Bye": 14},
+    {"Rank": 52, "Name": "Sam LaPorta", "Pos": "TE", "Team": "DET", "Tier": 7, "ProjPts": 205.0, "Bye": 5},
+    {"Rank": 53, "Name": "T.J. Hockenson", "Pos": "TE", "Team": "MIN", "Tier": 7, "ProjPts": 195.0, "Bye": 6},
+    {"Rank": 54, "Name": "Kyle Pitts", "Pos": "TE", "Team": "ATL", "Tier": 7, "ProjPts": 175.0, "Bye": 12},
+    {"Rank": 55, "Name": "Aaron Jones", "Pos": "RB", "Team": "MIN", "Tier": 7, "ProjPts": 210.0, "Bye": 6},
+    {"Rank": 56, "Name": "Rachaad White", "Pos": "RB", "Team": "TB", "Tier": 7, "ProjPts": 215.0, "Bye": 11},
+    {"Rank": 57, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7, "ProjPts": 220.0, "Bye": 6},
+    {"Rank": 58, "Name": "Josh Jacobs", "Pos": "RB", "Team": "GB", "Tier": 7, "ProjPts": 225.0, "Bye": 10},
+    {"Rank": 59, "Name": "Alvin Kamara", "Pos": "RB", "Team": "NO", "Tier": 7, "ProjPts": 218.0, "Bye": 12},
+    {"Rank": 60, "Name": "Joe Mixon", "Pos": "RB", "Team": "HOU", "Tier": 7, "ProjPts": 222.0, "Bye": 14},
+    {"Rank": 61, "Name": "DK Metcalf", "Pos": "WR", "Team": "SEA", "Tier": 8, "ProjPts": 230.0, "Bye": 10},
+    {"Rank": 62, "Name": "Chris Olave", "Pos": "WR", "Team": "NO", "Tier": 8, "ProjPts": 232.0, "Bye": 12},
+    {"Rank": 63, "Name": "Michael Pittman Jr.", "Pos": "WR", "Team": "IND", "Tier": 8, "ProjPts": 210.0, "Bye": 14},
+    {"Rank": 64, "Name": "Zay Flowers", "Pos": "WR", "Team": "BAL", "Tier": 8, "ProjPts": 208.0, "Bye": 14},
+    {"Rank": 65, "Name": "Tank Dell", "Pos": "WR", "Team": "HOU", "Tier": 8, "ProjPts": 195.0, "Bye": 14},
+    {"Rank": 66, "Name": "Rashee Rice", "Pos": "WR", "Team": "KC", "Tier": 8, "ProjPts": 240.0, "Bye": 6},
+    {"Rank": 67, "Name": "Stefon Diggs", "Pos": "WR", "Team": "HOU", "Tier": 8, "ProjPts": 212.0, "Bye": 14},
+    {"Rank": 68, "Name": "Amari Cooper", "Pos": "WR", "Team": "BUF", "Tier": 8, "ProjPts": 205.0, "Bye": 12},
+    {"Rank": 69, "Name": "Tee Higgins", "Pos": "WR", "Team": "CIN", "Tier": 8, "ProjPts": 200.0, "Bye": 12},
+    {"Rank": 70, "Name": "DeVonta Smith", "Pos": "WR", "Team": "PHI", "Tier": 8, "ProjPts": 215.0, "Bye": 5},
+    {"Rank": 71, "Name": "Matthew Stafford", "Pos": "QB", "Team": "LAR", "Tier": 9, "ProjPts": 265.0, "Bye": 6},
+    {"Rank": 72, "Name": "Aaron Rodgers", "Pos": "QB", "Team": "NYJ", "Tier": 9, "ProjPts": 255.0, "Bye": 12},
+    {"Rank": 73, "Name": "Tua Tagovailoa", "Pos": "QB", "Team": "MIA", "Tier": 9, "ProjPts": 260.0, "Bye": 6},
+    {"Rank": 74, "Name": "Kirk Cousins", "Pos": "QB", "Team": "ATL", "Tier": 9, "ProjPts": 250.0, "Bye": 12},
+    {"Rank": 75, "Name": "Anthony Richardson", "Pos": "QB", "Team": "IND", "Tier": 9, "ProjPts": 275.0, "Bye": 14},
+    {"Rank": 76, "Name": "Deshaun Watson", "Pos": "QB", "Team": "CLE", "Tier": 9, "ProjPts": 240.0, "Bye": 10},
+    {"Rank": 77, "Name": "Will Levis", "Pos": "QB", "Team": "TEN", "Tier": 9, "ProjPts": 220.0, "Bye": 5},
+    {"Rank": 78, "Name": "C.J. Stroud", "Pos": "QB", "Team": "HOU", "Tier": 9, "ProjPts": 290.0, "Bye": 14},
+    {"Rank": 79, "Name": "J.K. Dobbins", "Pos": "RB", "Team": "LAC", "Tier": 9, "ProjPts": 185.0, "Bye": 5},
+    {"Rank": 80, "Name": "Tony Pollard", "Pos": "RB", "Team": "TEN", "Tier": 9, "ProjPts": 190.0, "Bye": 5},
+    {"Rank": 81, "Name": "Najee Harris", "Pos": "RB", "Team": "PIT", "Tier": 10, "ProjPts": 195.0, "Bye": 9},
+    {"Rank": 82, "Name": "Jaylen Warren", "Pos": "RB", "Team": "PIT", "Tier": 10, "ProjPts": 180.0, "Bye": 9},
+    {"Rank": 83, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 10, "ProjPts": 200.0, "Bye": 5},
+    {"Rank": 84, "Name": "Zamir White", "Pos": "RB", "Team": "LV", "Tier": 10, "ProjPts": 170.0, "Bye": 10},
+    {"Rank": 85, "Name": "Ezekiel Elliott", "Pos": "RB", "Team": "DAL", "Tier": 10, "ProjPts": 150.0, "Bye": 7},
+    {"Rank": 86, "Name": "Rhamondre Stevenson", "Pos": "RB", "Team": "NE", "Tier": 10, "ProjPts": 190.0, "Bye": 11},
+    {"Rank": 87, "Name": "Brian Robinson Jr.", "Pos": "RB", "Team": "WAS", "Tier": 10, "ProjPts": 192.0, "Bye": 14},
+    {"Rank": 88, "Name": "Chuba Hubbard", "Pos": "RB", "Team": "CAR", "Tier": 10, "ProjPts": 175.0, "Bye": 11},
+    {"Rank": 89, "Name": "Khalil Herbert", "Pos": "RB", "Team": "CIN", "Tier": 10, "ProjPts": 140.0, "Bye": 12},
+    {"Rank": 90, "Name": "Tyler Allgeier", "Pos": "RB", "Team": "ATL", "Tier": 10, "ProjPts": 135.0, "Bye": 12},
+    {"Rank": 91, "Name": "Jerome Ford", "Pos": "RB", "Team": "CLE", "Tier": 11, "ProjPts": 165.0, "Bye": 10},
+    {"Rank": 92, "Name": "Gus Edwards", "Pos": "RB", "Team": "LAC", "Tier": 11, "ProjPts": 145.0, "Bye": 5},
+    {"Rank": 93, "Name": "Tyjae Spears", "Pos": "RB", "Team": "TEN", "Tier": 11, "ProjPts": 155.0, "Bye": 5},
+    {"Rank": 94, "Name": "Zach Charbonnet", "Pos": "RB", "Team": "SEA", "Tier": 11, "ProjPts": 150.0, "Bye": 10},
+    {"Rank": 95, "Name": "Blake Corum", "Pos": "RB", "Team": "LAR", "Tier": 11, "ProjPts": 130.0, "Bye": 6},
+    {"Rank": 96, "Name": "MarShawn Lloyd", "Pos": "RB", "Team": "GB", "Tier": 11, "ProjPts": 125.0, "Bye": 10},
+    {"Rank": 97, "Name": "Ray Davis", "Pos": "RB", "Team": "BUF", "Tier": 11, "ProjPts": 120.0, "Bye": 12},
+    {"Rank": 98, "Name": "Trey Benson", "Pos": "RB", "Team": "ARI", "Tier": 11, "ProjPts": 135.0, "Bye": 11},
+    {"Rank": 99, "Name": "Courtland Sutton", "Pos": "WR", "Team": "DEN", "Tier": 11, "ProjPts": 185.0, "Bye": 14},
+    {"Rank": 100, "Name": "Christian Kirk", "Pos": "WR", "Team": "JAC", "Tier": 11, "ProjPts": 180.0, "Bye": 12},
+    {"Rank": 101, "Name": "Calvin Ridley", "Pos": "WR", "Team": "TEN", "Tier": 12, "ProjPts": 190.0, "Bye": 5},
+    {"Rank": 102, "Name": "Terry McLaurin", "Pos": "WR", "Team": "WAS", "Tier": 12, "ProjPts": 195.0, "Bye": 14},
+    {"Rank": 103, "Name": "Diontae Johnson", "Pos": "WR", "Team": "BAL", "Tier": 12, "ProjPts": 182.0, "Bye": 14},
+    {"Rank": 104, "Name": "Keenan Allen", "Pos": "WR", "Team": "CHI", "Tier": 12, "ProjPts": 188.0, "Bye": 7},
+    {"Rank": 105, "Name": "Chris Godwin", "Pos": "WR", "Team": "TB", "Tier": 12, "ProjPts": 198.0, "Bye": 11},
+    {"Rank": 106, "Name": "Mike Evans", "Pos": "WR", "Team": "TB", "Tier": 12, "ProjPts": 210.0, "Bye": 11},
+    {"Rank": 107, "Name": "Hollywood Brown", "Pos": "WR", "Team": "KC", "Tier": 12, "ProjPts": 175.0, "Bye": 6},
+    {"Rank": 108, "Name": "Jahan Dotson", "Pos": "WR", "Team": "PHI", "Tier": 12, "ProjPts": 140.0, "Bye": 5},
+    {"Rank": 109, "Name": "Jordan Addison", "Pos": "WR", "Team": "MIN", "Tier": 12, "ProjPts": 178.0, "Bye": 6},
+    {"Rank": 110, "Name": "Xavier Worthy", "Pos": "WR", "Team": "KC", "Tier": 12, "ProjPts": 170.0, "Bye": 6},
+    {"Rank": 111, "Name": "Ladd McConkey", "Pos": "WR", "Team": "LAC", "Tier": 13, "ProjPts": 165.0, "Bye": 5},
+    {"Rank": 112, "Name": "Keon Coleman", "Pos": "WR", "Team": "BUF", "Tier": 13, "ProjPts": 160.0, "Bye": 12},
+    {"Rank": 113, "Name": "Rome Odunze", "Pos": "WR", "Team": "CHI", "Tier": 13, "ProjPts": 172.0, "Bye": 7},
+    {"Rank": 114, "Name": "Adonai Mitchell", "Pos": "WR", "Team": "IND", "Tier": 13, "ProjPts": 135.0, "Bye": 14},
+    {"Rank": 115, "Name": "Ja'Lynn Polk", "Pos": "WR", "Team": "NE", "Tier": 13, "ProjPts": 130.0, "Bye": 11},
+    {"Rank": 116, "Name": "Ricky Pearsall", "Pos": "WR", "Team": "SF", "Tier": 13, "ProjPts": 125.0, "Bye": 9},
+    {"Rank": 117, "Name": "Dallas Goedert", "Pos": "TE", "Team": "PHI", "Tier": 13, "ProjPts": 150.0, "Bye": 5},
+    {"Rank": 118, "Name": "Evan Engram", "Pos": "TE", "Team": "JAC", "Tier": 13, "ProjPts": 168.0, "Bye": 12},
+    {"Rank": 119, "Name": "Pat Freiermuth", "Pos": "TE", "Team": "PIT", "Tier": 13, "ProjPts": 140.0, "Bye": 9},
+    {"Rank": 120, "Name": "David Njoku", "Pos": "TE", "Team": "CLE", "Tier": 13, "ProjPts": 160.0, "Bye": 10},
+    {"Rank": 121, "Name": "Jake Ferguson", "Pos": "TE", "Team": "DAL", "Tier": 14, "ProjPts": 155.0, "Bye": 7},
+    {"Rank": 122, "Name": "Dalton Kincaid", "Pos": "TE", "Team": "BUF", "Tier": 14, "ProjPts": 162.0, "Bye": 12},
+    {"Rank": 123, "Name": "Taysom Hill", "Pos": "TE", "Team": "NO", "Tier": 14, "ProjPts": 130.0, "Bye": 12},
+    {"Rank": 124, "Name": "Cole Kmet", "Pos": "TE", "Team": "CHI", "Tier": 14, "ProjPts": 145.0, "Bye": 7},
+    {"Rank": 125, "Name": "Russell Wilson", "Pos": "QB", "Team": "PIT", "Tier": 14, "ProjPts": 230.0, "Bye": 9},
+    {"Rank": 126, "Name": "Geno Smith", "Pos": "QB", "Team": "SEA", "Tier": 14, "ProjPts": 235.0, "Bye": 10},
+    {"Rank": 127, "Name": "Derek Carr", "Pos": "QB", "Team": "NO", "Tier": 14, "ProjPts": 225.0, "Bye": 12},
+    {"Rank": 128, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 14, "ProjPts": 210.0, "Bye": 11},
+    {"Rank": 129, "Name": "Justin Fields", "Pos": "QB", "Team": "PIT", "Tier": 14, "ProjPts": 220.0, "Bye": 9},
+    {"Rank": 130, "Name": "Baker Mayfield", "Pos": "QB", "Team": "TB", "Tier": 14, "ProjPts": 245.0, "Bye": 11},
+    {"Rank": 131, "Name": "Sam Darnold", "Pos": "QB", "Team": "MIN", "Tier": 15, "ProjPts": 215.0, "Bye": 6},
+    {"Rank": 132, "Name": "Joe Flacco", "Pos": "QB", "Team": "IND", "Tier": 15, "ProjPts": 190.0, "Bye": 14},
+    {"Rank": 133, "Name": "Khalil Shakir", "Pos": "WR", "Team": "BUF", "Tier": 15, "ProjPts": 120.0, "Bye": 12},
+    {"Rank": 134, "Name": "Demarcus Robinson", "Pos": "WR", "Team": "LAR", "Tier": 15, "ProjPts": 115.0, "Bye": 6},
+    {"Rank": 135, "Name": "Rashod Bateman", "Pos": "WR", "Team": "BAL", "Tier": 15, "ProjPts": 118.0, "Bye": 14},
+    {"Rank": 136, "Name": "Curtis Samuel", "Pos": "WR", "Team": "BUF", "Tier": 15, "ProjPts": 122.0, "Bye": 12},
+    {"Rank": 137, "Name": "Tyler Boyd", "Pos": "WR", "Team": "TEN", "Tier": 15, "ProjPts": 110.0, "Bye": 5},
+    {"Rank": 138, "Name": "Josh Downs", "Pos": "WR", "Team": "IND", "Tier": 15, "ProjPts": 125.0, "Bye": 14},
+    {"Rank": 139, "Name": "Wan'Dale Robinson", "Pos": "WR", "Team": "NYG", "Tier": 15, "ProjPts": 115.0, "Bye": 11},
+    {"Rank": 140, "Name": "Kendrick Bourne", "Pos": "WR", "Team": "NE", "Tier": 15, "ProjPts": 105.0, "Bye": 11},
+    {"Rank": 141, "Name": "Luke Musgrave", "Pos": "TE", "Team": "GB", "Tier": 16, "ProjPts": 110.0, "Bye": 10},
+    {"Rank": 142, "Name": "Michael Mayer", "Pos": "TE", "Team": "LV", "Tier": 16, "ProjPts": 105.0, "Bye": 10},
+    {"Rank": 143, "Name": "Noah Fant", "Pos": "TE", "Team": "SEA", "Tier": 16, "ProjPts": 100.0, "Bye": 10},
+    {"Rank": 144, "Name": "Juwan Johnson", "Pos": "TE", "Team": "NO", "Tier": 16, "ProjPts": 102.0, "Bye": 12},
+    {"Rank": 145, "Name": "Emanuel Wilson", "Pos": "RB", "Team": "GB", "Tier": 16, "ProjPts": 95.0, "Bye": 10},
+    {"Rank": 146, "Name": "Antonio Gibson", "Pos": "RB", "Team": "NE", "Tier": 16, "ProjPts": 112.0, "Bye": 11},
+    {"Rank": 147, "Name": "Dameon Pierce", "Pos": "RB", "Team": "HOU", "Tier": 16, "ProjPts": 90.0, "Bye": 14},
+    {"Rank": 148, "Name": "Clyde Edwards-Helaire", "Pos": "RB", "Team": "KC", "Tier": 16, "ProjPts": 88.0, "Bye": 6},
+    {"Rank": 149, "Name": "Gardner Minshew II", "Pos": "QB", "Team": "LV", "Tier": 16, "ProjPts": 180.0, "Bye": 10},
+    {"Rank": 150, "Name": "Jacoby Brissett", "Pos": "QB", "Team": "NE", "Tier": 16, "ProjPts": 170.0, "Bye": 11}
 ]
 
 # -----------------------------------------------------------------------------
-# 4. SESSION STATE INITIALIZATION
+# 2. SESSION STATE SETUP
 # -----------------------------------------------------------------------------
 if 'players_df' not in st.session_state:
-    df_init = pd.DataFrame(DEFAULT_PLAYERS)
-    df_init['Drafted'] = False
-    df_init['Drafted_By'] = None
-    df_init['Pick_Num'] = None
-    st.session_state.players_df = df_init
+    df = pd.DataFrame(DEFAULT_PLAYERS)
+    df['Drafted'] = False
+    df['DraftedBy'] = None
+    st.session_state['players_df'] = df
 
-if 'num_teams' not in st.session_state: st.session_state.num_teams = 12
-if 'num_rounds' not in st.session_state: st.session_state.num_rounds = 15
-if 'user_team_num' not in st.session_state: st.session_state.user_team_num = 1
-if 'current_pick' not in st.session_state: st.session_state.current_pick = 1
-if 'draft_history' not in st.session_state: st.session_state.draft_history = []
-if 'is_mock_mode' not in st.session_state: st.session_state.is_mock_mode = False
+if 'my_roster' not in st.session_state:
+    st.session_state['my_roster'] = []
 
 # -----------------------------------------------------------------------------
-# 5. ADVANCED METRICS (VBD & SCORING MODIFIERS)
+# 3. SIDEBAR CONTROLS & LEAGUE SETTINGS
 # -----------------------------------------------------------------------------
-def calculate_vbd(df, te_premium=1.0):
-    working_df = df.copy()
-    # Apply TE Premium multiplier if toggled
-    working_df.loc[working_df['Pos'] == 'TE', 'ProjPts'] *= te_premium
+st.sidebar.header("⚙️ League Settings")
+league_type = st.sidebar.selectbox("League Format", ["Superflex (10-Team)", "1QB PPR (10-Team)"])
+scoring_system = st.sidebar.selectbox("Scoring System", ["PPR", "Half-PPR", "Standard"])
+
+st.sidebar.markdown("---")
+st.sidebar.header("🛠️ Draft Controls")
+search_query = st.sidebar.text_input("Search Player")
+pos_filter = st.sidebar.multiselect("Filter Position", ["QB", "RB", "WR", "TE"], default=["QB", "RB", "WR", "TE"])
+
+if st.sidebar.button("🔄 Reset Draft Board"):
+    st.session_state['players_df']['Drafted'] = False
+    st.session_state['players_df']['DraftedBy'] = None
+    st.session_state['my_roster'] = []
+    st.rerun()
+
+# -----------------------------------------------------------------------------
+# 4. MAIN INTERFACE & VBD CALCULATIONS
+# -----------------------------------------------------------------------------
+st.title("🏈 Fantasy Football Draft Assistant")
+st.markdown("Live 150-Player Board optimized for competitive Superflex formats.")
+
+df = st.session_state['players_df']
+
+# Simple VBD Calculation Baseline
+# Baseline replacement scores (approximate baseline for top 10-team leagues)
+baselines = {'QB': 180.0, 'RB': 120.0, 'WR': 130.0, 'TE': 100.0}
+df['VBD'] = df.apply(lambda row: max(0.0, row['ProjPts'] - baselines.get(row['Pos'], 100.0)), axis=1)
+
+# Apply filters
+filtered_df = df[df['Pos'].isin(pos_filter)]
+if search_query:
+    filtered_df = filtered_df[filtered_df['Name'].str.contains(search_query, case=False)]
+
+# Tabs for layout structure
+tab1, tab2, tab3 = st.tabs(["📋 Draft Board", "👤 My Roster", "📊 Tier Breakdown"])
+
+with tab1:
+    st.subheader("Available Player Rankings (Top 150)")
     
-    baselines = {}
-    # Baseline replacement levels (approximate starter thresholds for 12-team leagues)
-    replacement_ranks = {'QB': 15, 'RB': 30, 'WR': 36, 'TE': 12}
+    # Display table with interactive selection
+    available_players = filtered_df[~filtered_df['Drafted']]
     
-    for pos, rank_idx in replacement_ranks.items():
-        pos_df = working_df[working_df['Pos'] == pos].sort_values(by='ProjPts', ascending=False)
-        if len(pos_df) >= rank_idx:
-            baselines[pos] = pos_df.iloc[rank_idx - 1]['ProjPts']
-        elif not pos_df.empty:
-            baselines[pos] = pos_df.iloc[-1]['ProjPts']
-        else:
-            baselines[pos] = 0.0
-            
-    working_df['VBD'] = working_df.apply(lambda row: row['ProjPts'] - baselines.get(row['Pos'], 0.0), axis=1)
-    return working_df
-
-# -----------------------------------------------------------------------------
-# 6. API HELPERS & AUTOMATION
-# -----------------------------------------------------------------------------
-@st.cache_data(ttl=86400)
-def fetch_sleeper_players():
-    try:
-        res = requests.get("https://api.sleeper.app/v1/players/nfl", timeout=5)
-        if res.status_code == 200:
-            return {pid: f"{p.get('first_name', '')} {p.get('last_name', '')}".strip() for pid, p in res.json().items()}
-    except Exception:
-        pass
-    return {}
-
-def draft_player(player_index, team_num):
-    st.session_state.players_df.loc[player_index, 'Drafted'] = True
-    st.session_state.players_df.loc[player_index, 'Drafted_By'] = int(team_num)
-    st.session_state.players_df.loc[player_index, 'Pick_Num'] = int(st.session_state.current_pick)
-    st.session_state.draft_history.append((player_index, st.session_state.current_pick))
-    st.session_state.current_pick += 1
-
-def undo_last_pick():
-    if st.session_state.draft_history:
-        last_index, last_pick = st.session_state.draft_history.pop()
-        st.session_state.players_df.loc[last_index, 'Drafted'] = False
-        st.session_state.players_df.loc[last_index, 'Drafted_By'] = None
-        st.session_state.players_df.loc[last_index, 'Pick_Num'] = None
-        st.session_state.current_pick = last_pick
-
-def get_on_the_clock_team(pick_num, total_teams):
-    round_num = (pick_num - 1) // total_teams + 1
-    pick_in_round = (pick_num - 1) % total_teams + 1
-    return pick_in_round if round_num % 2 == 1 else total_teams - pick_in_round + 1
-
-# -----------------------------------------------------------------------------
-# 7. SIDEBAR COMMAND CENTER & LEAGUE SETTINGS
-# -----------------------------------------------------------------------------
-with st.sidebar:
-    st.title("⚙️ League Settings")
-    st.session_state.num_teams = st.number_input("Number of Teams", 4, 20, int(st.session_state.num_teams))
-    st.session_state.num_rounds = st.number_input("Number of Rounds", 1, 30, int(st.session_state.num_rounds))
-    st.session_state.user_team_num = st.selectbox("Your Pick Position", list(range(1, st.session_state.num_teams + 1)))
+    col_left, col_right = st.columns([3, 1])
     
-    st.divider()
-    st.subheader("📊 Scoring Rules")
-    scoring_format = st.selectbox("Scoring System", ["Half-PPR (Default)", "Full PPR", "Standard"])
-    te_premium_val = st.slider("TE Premium Bonus (Rec Yards/TD)", 1.0, 2.0, 1.0, 0.5)
+    with col_left:
+        st.dataframe(
+            available_players[['Rank', 'Name', 'Pos', 'Team', 'Tier', 'ProjPts', 'VBD', 'Bye']],
+            use_container_width=True,
+            hide_index=True
+        )
     
-    st.divider()
-    col_u1, col_u2 = st.columns(2)
-    with col_u1:
-        if st.button("↩️ Undo", use_container_width=True):
-            undo_last_pick()
-            st.rerun()
-    with col_u2:
-        if st.button("🔄 Reset", type="primary", use_container_width=True):
-            st.session_state.players_df['Drafted'] = False
-            st.session_state.players_df['Drafted_By'] = None
-            st.session_state.players_df['Pick_Num'] = None
-            st.session_state.current_pick = 1
-            st.session_state.draft_history = []
-            st.rerun()
-
-# Apply VBD calculations dynamically
-st.session_state.players_df = calculate_vbd(st.session_state.players_df, te_premium=te_premium_val)
-
-# -----------------------------------------------------------------------------
-# 8. HEADER METRICS STATUS BAR
-# -----------------------------------------------------------------------------
-current_pick = st.session_state.current_pick
-max_picks = st.session_state.num_teams * st.session_state.num_rounds
-
-if current_pick <= max_picks:
-    current_round = (current_pick - 1) // st.session_state.num_teams + 1
-    on_the_clock = get_on_the_clock_team(current_pick, st.session_state.num_teams)
-    is_user_turn = (on_the_clock == st.session_state.user_team_num)
-else:
-    on_the_clock = None
-    is_user_turn = False
-
-# Mock Draft AI Logic Automation Trigger
-if on_the_clock and on_the_clock != st.session_state.user_team_num and st.session_state.is_mock_mode:
-    undrafted_pool = st.session_state.players_df[st.session_state.players_df['Drafted'] == False]
-    if not undrafted_pool.empty:
-        # AI drafts best VBD available
-        best_ai_pick = undrafted_pool.sort_values(by='VBD', ascending=False).index[0]
-        draft_player(best_ai_pick, on_the_clock)
-        st.rerun()
-
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-with col_m1: st.metric("Overall Pick", f"#{current_pick}" if current_pick <= max_picks else "Complete")
-with col_m2: st.metric("Round / Pick", f"R{(current_pick-1)//st.session_state.num_teams+1} . P{(current_pick-1)%st.session_state.num_teams+1}")
-with col_m3: st.metric("On The Clock", f"Team {on_the_clock}" + (" (YOU!) 🎉" if is_user_turn else ""))
-with col_m4: 
-    mock_toggle = st.toggle("🤖 AI Mock Auto-Pilot", value=st.session_state.is_mock_mode)
-    if mock_toggle != st.session_state.is_mock_mode:
-        st.session_state.is_mock_mode = mock_toggle
-        st.rerun()
-
-st.divider()
-
-# -----------------------------------------------------------------------------
-# 9. ADVANCED TABS INTERFACE
-# -----------------------------------------------------------------------------
-tab_cheat, tab_board, tab_rosters, tab_trade = st.tabs([
-    "📋 Cheat Sheet & VBD", "🗺️ Visual Draft Board", "🛡️ Rosters & Bye Tracker", "⚖️ In-Draft Trade Analyzer"
-])
-
-# TAB 1: CHEAT SHEET & VBD
-with tab_cheat:
-    col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
-    with col_f1: search_query = st.text_input("🔍 Search Player", placeholder="Search name...").strip().lower()
-    with col_f2: pos_filter = st.multiselect("Filter Position", ['QB', 'RB', 'WR', 'TE'], default=['QB', 'RB', 'WR', 'TE'])
-    with col_f3: hide_drafted = st.checkbox("Hide Drafted", value=True)
-
-    df_view = st.session_state.players_df.copy()
-    if hide_drafted: df_view = df_view[df_view['Drafted'] == False]
-    if pos_filter: df_view = df_view[df_view['Pos'].isin(pos_filter)]
-    if search_query: df_view = df_view[df_view['Name'].str.lower().str.contains(search_query)]
-
-    df_view = df_view.sort_values(by='VBD', ascending=False)
-    
-    for idx, row in df_view.head(25).iterrows():
-        c1, c2, c3, c4, c5, c6 = st.columns([1, 3, 1, 1, 2, 2])
-        c1.write(f"#{row['Rank']}")
-        c2.write(f"**{row['Name']}** ({row['Team']})")
-        c3.markdown(f"<span class='badge-{row['Pos'].lower()}'>{row['Pos']}</span>", unsafe_allow_html=True)
-        c4.write(f"VBD: +{row['VBD']:.1f}")
+    with col_right:
+        st.markdown("### Draft Player")
+        player_to_draft = st.selectbox("Select Player to Draft", available_players['Name'].tolist())
         
-        if not row['Drafted'] and current_pick <= max_picks:
-            if c5.button(f"Draft → Team {on_the_clock}", key=f"d_{idx}", use_container_width=True):
-                draft_player(idx, on_the_clock)
-                st.rerun()
-            if on_the_clock != st.session_state.user_team_num:
-                if c6.button("Draft → MY Team", key=f"my_{idx}", use_container_width=True):
-                    draft_player(idx, st.session_state.user_team_num)
-                    st.rerun()
-        elif row['Drafted']:
-            c5.write(f"✅ Drafted Team {row['Drafted_By']}")
-
-# TAB 2: VISUAL DRAFT BOARD
-with tab_board:
-    st.subheader("Full Draft Grid Board")
-    drafted_df = st.session_state.players_df[st.session_state.players_df['Drafted'] == True]
-    if not drafted_df.empty:
-        summary_board = drafted_df[['Pick_Num', 'Drafted_By', 'Name', 'Pos', 'Team', 'Tier']].sort_values('Pick_Num')
-        summary_board.columns = ['Pick', 'Team #', 'Player', 'Pos', 'NFL Team', 'Tier']
-        st.dataframe(summary_board, hide_index=True, use_container_width=True)
-    else:
-        st.info("No picks recorded yet.")
-
-# TAB 3: ROSTERS & BYE WEEKS
-with tab_rosters:
-    st.subheader("Team Roster & Bye-Week Matrix")
-    sel_team = st.selectbox("Select Team to Inspect", list(range(1, st.session_state.num_teams + 1)))
-    team_roster = st.session_state.players_df[st.session_state.players_df['Drafted_By'] == sel_team]
-    
-    if not team_roster.empty:
-        st.dataframe(team_roster[['Pick_Num', 'Name', 'Pos', 'Team', 'Bye', 'ProjPts']], hide_index=True, use_container_width=True)
-        
-        # Bye week stacking warning
-        bye_counts = team_roster['Bye'].value_counts()
-        heavy_byes = bye_counts[bye_counts >= 2]
-        if not heavy_byes.empty:
-            for bye_week, count in heavy_byes.items():
-                st.warning(f"⚠️ **Bye Week Alert**: You have {count} players on Bye during Week {bye_week}!")
-    else:
-        st.info(f"Team {sel_team} has no rostered players.")
-
-# TAB 4: TRADE ANALYZER
-with tab_trade:
-    st.subheader("In-Draft Pick & Player Trade Calculator")
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        st.markdown("**Your Side (Giving Up)**")
-        give_player = st.selectbox("Select Player to Trade Away", st.session_state.players_df['Name'].tolist(), key='give')
-    with col_t2:
-        st.markdown("**Receiving Side (Acquiring)**")
-        get_player = st.selectbox("Select Player to Acquire", st.session_state.players_df['Name'].tolist(), key='get')
-        
-    if st.button("Evaluate Trade Fairness", type="primary"):
-        p1_val = st.session_state.players_df.loc[st.session_state.players_df['Name'] == give_player, 'ProjPts'].values[0]
-        p2_val = st.session_state.players_df.loc[st.session_state.players_df['Name'] == get_player, 'ProjPts'].values[0]
-        diff = p2_val - p1_val
-        
-        if diff > 15:
-            st.success(f"🔥 **Smash Accept!** You gain an estimated +{diff:.1f} projected season points.")
-        elif diff < -15:
-            st.error(f"🛑 **Reject Trade!** You lose an estimated {abs(diff):.1f} projected season points.")
-        else:
-            st.info(f"⚖️ **Fair Trade.** Minimal impact on projected points (Difference: {diff:+.1f} pts).")
-            
+        col_btn1, col_btn2 = st.columns
