@@ -355,4 +355,3 @@ with tab_rosters:
         else "Empty"
     )
     st.write(f"**{team_label}**: {roster_str}")
-      
