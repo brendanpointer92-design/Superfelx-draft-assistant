@@ -114,7 +114,7 @@ def get_position_badge(pos):
     return f"<span>{pos}</span>"
 
 
-# Enhanced 150-Player Database with Draft Sharks metrics
+# Enhanced 150-Player Database with metrics
 @st.cache_data
 def load_150_players():
     base_players = [
@@ -458,7 +458,7 @@ round_n, current_slot, is_user_turn = get_current_picker(
     current_pick, user_draft_slot, league_size
 )
 
-# Top Status Indicator Bar (Optimized for Mobile Stacking)
+# Top Status Indicator Bar
 sc1, sc2 = st.columns(2)
 sc1.metric("Current Overall Pick", f"#{current_pick}")
 sc2.metric("Draft Round", f"Round {round_n}")
@@ -538,8 +538,10 @@ with tab_draft:
         filtered = filtered[filtered["pos"] == pos_f]
     if search_q:
         filtered = filtered[
-            filtered["name"].str.lower().contains(search_q.lower())
-            | filtered["team"].str.lower().contains(search_q.lower())
+            filtered["name"].str.lower().str.contains(search_q.lower(), na=False)
+            | filtered["team"]
+            .str.lower()
+            .str.contains(search_q.lower(), na=False)
         ]
 
     for _, row in filtered.head(20).iterrows():
@@ -688,4 +690,4 @@ with tab_log:
             "WR": [],
             "TE": [],
             "FLEX": [],
-          
+        
