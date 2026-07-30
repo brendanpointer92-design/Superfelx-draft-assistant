@@ -26,14 +26,6 @@ st.markdown("""
     .badge-dst { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-k { background-color: #d62828; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     
-    .rec-card {
-        border: 1px solid #1f6beb;
-        background-color: #0d1117;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-    
     .draft-card {
         border: 1px solid #30363d;
         border-radius: 6px;
@@ -118,70 +110,9 @@ DEFAULT_PLAYERS = [
     {"Rank": 48, "Name": "Kenneth Walker III", "Pos": "RB", "Team": "KC", "Tier": 6},
     {"Rank": 49, "Name": "Tua Tagovailoa", "Pos": "QB", "Team": "MIA", "Tier": 6},
     {"Rank": 50, "Name": "Geno Smith", "Pos": "QB", "Team": "SEA", "Tier": 6},
-    # Tier 7
-    {"Rank": 51, "Name": "Rashee Rice", "Pos": "WR", "Team": "KC", "Tier": 7},
-    {"Rank": 52, "Name": "George Pickens", "Pos": "WR", "Team": "DAL", "Tier": 7},
-    {"Rank": 53, "Name": "Omarion Hampton", "Pos": "RB", "Team": "LAC", "Tier": 7},
-    {"Rank": 54, "Name": "Chase Brown", "Pos": "RB", "Team": "CIN", "Tier": 7},
-    {"Rank": 55, "Name": "Marvin Harrison Jr.", "Pos": "WR", "Team": "ARI", "Tier": 7},
-    {"Rank": 56, "Name": "Xavier Worthy", "Pos": "WR", "Team": "KC", "Tier": 7},
-    {"Rank": 57, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 7},
-    {"Rank": 58, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7},
-    {"Rank": 59, "Name": "Michael Penix Jr.", "Pos": "QB", "Team": "ATL", "Tier": 7},
-    {"Rank": 60, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 7},
-    # Tier 8
-    {"Rank": 61, "Name": "Colston Loveland", "Pos": "TE", "Team": "CHI", "Tier": 8},
-    {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
-    {"Rank": 63, "Name": "Devonta Smith", "Pos": "WR", "Team": "PHI", "Tier": 8},
-    {"Rank": 64, "Name": "DK Metcalf", "Pos": "WR", "Team": "SEA", "Tier": 8},
-    {"Rank": 65, "Name": "Terry McLaurin", "Pos": "WR", "Team": "WAS", "Tier": 8},
-    {"Rank": 66, "Name": "Rhamondre Stevenson", "Pos": "RB", "Team": "NE", "Tier": 8},
-    {"Rank": 67, "Name": "Chuba Hubbard", "Pos": "RB", "Team": "CAR", "Tier": 8},
-    {"Rank": 68, "Name": "Anthony Richardson", "Pos": "QB", "Team": "IND", "Tier": 8},
-    {"Rank": 69, "Name": "Deshaun Watson", "Pos": "QB", "Team": "CLE", "Tier": 8},
-    {"Rank": 70, "Name": "J.J. McCarthy", "Pos": "QB", "Team": "MIN", "Tier": 8},
-    # Tier 9
-    {"Rank": 71, "Name": "James Conner", "Pos": "RB", "Team": "ARI", "Tier": 9},
-    {"Rank": 72, "Name": "Tony Pollard", "Pos": "RB", "Team": "TEN", "Tier": 9},
-    {"Rank": 73, "Name": "Aaron Jones", "Pos": "RB", "Team": "MIN", "Tier": 9},
-    {"Rank": 74, "Name": "DJ Moore", "Pos": "WR", "Team": "CHI", "Tier": 9},
-    {"Rank": 75, "Name": "Jaylen Waddle", "Pos": "WR", "Team": "MIA", "Tier": 9},
-    {"Rank": 76, "Name": "Chris Olave", "Pos": "WR", "Team": "NO", "Tier": 9},
-    {"Rank": 77, "Name": "Zay Flowers", "Pos": "WR", "Team": "BAL", "Tier": 9},
-    {"Rank": 78, "Name": "Tyler Warren", "Pos": "TE", "Team": "IND", "Tier": 9},
-    {"Rank": 79, "Name": "Sam LaPorta", "Pos": "TE", "Team": "DET", "Tier": 9},
-    {"Rank": 80, "Name": "Matthew Stafford", "Pos": "QB", "Team": "LAR", "Tier": 9},
-    # Tier 10
-    {"Rank": 81, "Name": "Javonte Williams", "Pos": "RB", "Team": "DEN", "Tier": 10},
-    {"Rank": 82, "Name": "Rachaad White", "Pos": "RB", "Team": "TB", "Tier": 10},
-    {"Rank": 83, "Name": "D'Andre Swift", "Pos": "RB", "Team": "CHI", "Tier": 10},
-    {"Rank": 84, "Name": "Tank Dell", "Pos": "WR", "Team": "HOU", "Tier": 10},
-    {"Rank": 85, "Name": "Keon Coleman", "Pos": "WR", "Team": "BUF", "Tier": 10},
-    {"Rank": 86, "Name": "Rome Odunze", "Pos": "WR", "Team": "CHI", "Tier": 10},
-    {"Rank": 87, "Name": "Calvin Ridley", "Pos": "WR", "Team": "TEN", "Tier": 10},
-    {"Rank": 88, "Name": "Harold Fannin Jr.", "Pos": "TE", "Team": "CLE", "Tier": 10},
-    {"Rank": 89, "Name": "Kyle Pitts Sr.", "Pos": "TE", "Team": "ATL", "Tier": 10},
-    {"Rank": 90, "Name": "Aaron Rodgers", "Pos": "QB", "Team": "NYJ", "Tier": 10},
-    # Tier 11
-    {"Rank": 91, "Name": "Najee Harris", "Pos": "RB", "Team": "PIT", "Tier": 11},
-    {"Rank": 92, "Name": "Brian Robinson Jr.", "Pos": "RB", "Team": "WAS", "Tier": 11},
-    {"Rank": 93, "Name": "Zach Charbonnet", "Pos": "RB", "Team": "SEA", "Tier": 11},
-    {"Rank": 94, "Name": "Christian Kirk", "Pos": "WR", "Team": "JAC", "Tier": 11},
-    {"Rank": 95, "Name": "DeMario Douglas", "Pos": "WR", "Team": "NE", "Tier": 11},
-    {"Rank": 96, "Name": "Jerry Jeudy", "Pos": "WR", "Team": "CLE", "Tier": 11},
-    {"Rank": 97, "Name": "Dalton Kincaid", "Pos": "TE", "Team": "BUF", "Tier": 11},
-    {"Rank": 98, "Name": "Travis Kelce", "Pos": "TE", "Team": "KC", "Tier": 11},
-    {"Rank": 99, "Name": "Russell Wilson", "Pos": "QB", "Team": "PIT", "Tier": 11},
-    {"Rank": 100, "Name": "Will Levis", "Pos": "QB", "Team": "TEN", "Tier": 11},
 ]
 
-# Target roster construct for Superflex League (1QB, 2RB, 2WR, 1TE, 1FLEX, 1SFLEX)
-ROSTER_TARGETS = {
-    'QB': 2,   # 1 Starter + 1 Superflex
-    'RB': 2,   # Starters
-    'WR': 3,   # Starters
-    'TE': 1    # Starter
-}
+ROSTER_TARGETS = {'QB': 2, 'RB': 2, 'WR': 3, 'TE': 1}
 
 # -----------------------------------------------------------------------------
 # 3. SESSION STATE INITIALIZATION
@@ -212,7 +143,6 @@ if 'draft_history' not in st.session_state:
 # 4. HELPER FUNCTIONS & SUGGESTION ENGINE
 # -----------------------------------------------------------------------------
 def get_on_the_clock_team(pick_num, total_teams):
-    """Calculates team number on the clock using standard snake logic."""
     round_num = (pick_num - 1) // total_teams + 1
     pick_in_round = (pick_num - 1) % total_teams + 1
     if round_num % 2 == 1:
@@ -221,16 +151,13 @@ def get_on_the_clock_team(pick_num, total_teams):
         return total_teams - pick_in_round + 1
 
 def draft_player(player_index, team_num):
-    """Assigns a player to a team and advances the draft."""
     st.session_state.players_df.loc[player_index, 'Drafted'] = True
     st.session_state.players_df.loc[player_index, 'Drafted_By'] = int(team_num)
     st.session_state.players_df.loc[player_index, 'Pick_Num'] = int(st.session_state.current_pick)
-    
     st.session_state.draft_history.append((player_index, st.session_state.current_pick))
     st.session_state.current_pick += 1
 
 def undo_last_pick():
-    """Undoes the last pick."""
     if st.session_state.draft_history:
         last_index, last_pick = st.session_state.draft_history.pop()
         st.session_state.players_df.loc[last_index, 'Drafted'] = False
@@ -238,57 +165,44 @@ def undo_last_pick():
         st.session_state.players_df.loc[last_index, 'Pick_Num'] = None
         st.session_state.current_pick = last_pick
 
-def get_badge_html(pos):
-    return f'<span class="badge-{str(pos).lower()}">{str(pos)}</span>'
-
 def evaluate_team_needs(team_num):
-    """Evaluates positional need scores (High, Med, Low) based on current roster."""
     roster = st.session_state.players_df[st.session_state.players_df['Drafted_By'] == team_num]
     counts = roster['Pos'].value_counts().to_dict()
-    
     needs = {}
     for pos, target in ROSTER_TARGETS.items():
         curr = counts.get(pos, 0)
         if curr < target:
-            # Urgent need if missing core starters
             needs[pos] = 2.0 if curr == 0 else 1.2
         elif curr == target:
-            needs[pos] = 0.8 # Moderate need for depth/flex
+            needs[pos] = 0.8
         else:
-            needs[pos] = 0.4 # Low need
+            needs[pos] = 0.4
     return needs
 
 def get_player_suggestions(team_num, top_n=3):
-    """Generates player suggestions combining positional need and best available rank."""
     needs = evaluate_team_needs(team_num)
     undrafted = st.session_state.players_df[st.session_state.players_df['Drafted'] == False].copy()
     
     if undrafted.empty:
         return pd.DataFrame()
     
-    # Calculate dynamic recommendation score
     undrafted['Need_Multiplier'] = undrafted['Pos'].map(lambda p: needs.get(p, 0.5))
     undrafted['Rec_Score'] = undrafted['Need_Multiplier'] * (105 - undrafted['Rank'])
     
-    # Identify best overall player available regardless of need
     best_overall_rank = undrafted['Rank'].min()
-    
-    # Generate reason flags
     reasons = []
     for idx, row in undrafted.iterrows():
         pos_need = needs.get(row['Pos'], 0.5)
         is_bpa = (row['Rank'] == best_overall_rank)
         
         if is_bpa and pos_need >= 1.2:
-            reasons.append("🔥 Best Available & High Positional Need")
+            reasons.append("🔥 Best Available & High Need")
         elif is_bpa:
-            reasons.append("⭐ Best Player Available (BPA)")
+            reasons.append("⭐ Best Player Available")
         elif pos_need >= 2.0:
             reasons.append("⚠️ Critical Roster Need")
         elif pos_need >= 1.2:
             reasons.append("🎯 High Positional Need")
-        elif row['Tier'] <= 3:
-            reasons.append("💎 Elite Tier Remaining")
         else:
             reasons.append("👍 Solid Value Pick")
             
@@ -300,7 +214,6 @@ def get_player_suggestions(team_num, top_n=3):
 # -----------------------------------------------------------------------------
 with st.sidebar:
     st.title("⚙️ League Settings")
-    
     st.session_state.num_teams = st.number_input("Number of Teams", min_value=4, max_value=20, value=st.session_state.num_teams)
     st.session_state.num_rounds = st.number_input("Number of Rounds", min_value=1, max_value=30, value=st.session_state.num_rounds)
     st.session_state.user_team_num = st.selectbox(
@@ -308,7 +221,6 @@ with st.sidebar:
         options=list(range(1, st.session_state.num_teams + 1)),
         index=st.session_state.user_team_num - 1
     )
-    
     st.divider()
     
     col_u1, col_u2 = st.columns(2)
@@ -357,7 +269,7 @@ with col_m4:
         (st.session_state.players_df['Drafted_By'] == st.session_state.user_team_num) & 
         (st.session_state.players_df['Pos'] == 'QB')
     ])
-    st.metric("Your QBs Drafted", f"{user_qbs} QBs")
+    st.metric("Your QBs", f"{user_qbs} Drafted")
 
 st.divider()
 
@@ -379,13 +291,131 @@ with tab_cheat:
             s_cols = st.columns(len(suggestions))
             for idx, (_, s_player) in enumerate(suggestions.iterrows()):
                 with s_cols[idx]:
-                    pos_lower = str(s_player['Pos']).lower()
+                    # Clean Streamlit container wrapper guarantees buttons stay visible!
+                    with st.container(border=True):
+                        st.markdown(f"<span class='badge-{s_player['Pos'].lower()}'>{s_player['Pos']}</span> **{s_player['Name']}** ({s_player['Team']})", unsafe_allow_html=True)
+                        st.caption(f"Rank #{s_player['Rank']} | Tier {s_player['Tier']}")
+                        st.markdown(f"<small style='color: #58a6ff;'>{s_player['Reason']}</small>", unsafe_allow_html=True)
+                        st.write("")
+                        
+                        btn_label = f"Draft to Team {on_the_clock}"
+                        if st.button(btn_label, key=f"rec_btn_{s_player['Rank']}", type="primary", use_container_width=True):
+                            p_idx = st.session_state.players_df[st.session_state.players_df['Rank'] == s_player['Rank']].index[0]
+                            draft_player(p_idx, on_the_clock)
+                            st.rerun()
+            st.divider()
+
+    # Filters
+    col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
+    with col_f1:
+        search_query = st.text_input("🔍 Search Player", placeholder="Search by name or team...").strip().lower()
+    with col_f2:
+        pos_filter = st.multiselect("Filter Position", options=['QB', 'RB', 'WR', 'TE', 'DST', 'K'], default=['QB', 'RB', 'WR', 'TE'])
+    with col_f3:
+        hide_drafted = st.checkbox("Hide Drafted", value=True)
+
+    df = st.session_state.players_df.copy()
+    if hide_drafted:
+        df = df[df['Drafted'] == False]
+    if pos_filter:
+        df = df[df['Pos'].isin(pos_filter)]
+    if search_query:
+        df = df[df['Name'].str.lower().str.contains(search_query) | df['Team'].str.lower().str.contains(search_query)]
+
+    st.write(f"Showing **{len(df)}** players")
+    
+    # Table headers
+    h_rank, h_name, h_pos, h_team, h_act1, h_act2 = st.columns([1, 3, 1, 1, 2, 2])
+    h_rank.markdown("**Rank**")
+    h_name.markdown("**Player**")
+    h_pos.markdown("**Pos**")
+    h_team.markdown("**Team**")
+    h_act1.markdown("**Draft Action**")
+    h_act2.markdown("**Direct Action**")
+    st.divider()
+    
+    # Player Rows
+    for idx, row in df.iterrows():
+        c_rank, c_name, c_pos, c_team, c_act1, c_act2 = st.columns([1, 3, 1, 1, 2, 2])
+        
+        c_rank.write(f"#{row['Rank']}")
+        c_name.write(f"**{row['Name']}**")
+        c_pos.markdown(f"<span class='badge-{row['Pos'].lower()}'>{row['Pos']}</span>", unsafe_allow_html=True)
+        c_team.write(f"{row['Team']}")
+        
+        if not row['Drafted']:
+            if current_pick <= max_picks:
+                if c_act1.button(f"Draft → Team {on_the_clock}", key=f"otc_{idx}", use_container_width=True):
+                    draft_player(idx, on_the_clock)
+                    st.rerun()
+                if on_the_clock != st.session_state.user_team_num:
+                    if c_act2.button("Draft → MY Team", key=f"my_{idx}", use_container_width=True):
+                        draft_player(idx, st.session_state.user_team_num)
+                        st.rerun()
+        else:
+            pick_val = int(row['Pick_Num']) if pd.notnull(row['Pick_Num']) else "?"
+            c_act1.write(f"✅ Team {row['Drafted_By']} (Pick #{pick_val})")
+
+# -----------------------------------------------------------------------------
+# TAB 2: VISUAL DRAFT BOARD
+# -----------------------------------------------------------------------------
+with tab_board:
+    st.subheader("Interactive Draft Grid")
+    
+    num_teams = st.session_state.num_teams
+    num_rounds = st.session_state.num_rounds
+    
+    drafted_players = st.session_state.players_df[st.session_state.players_df['Drafted'] == True].copy()
+    if not drafted_players.empty:
+        drafted_players['Pick_Num'] = drafted_players['Pick_Num'].astype(int)
+    
+    board_cols = st.columns(num_teams)
+    for t_idx, col in enumerate(board_cols, start=1):
+        label = f"Team {t_idx}"
+        if t_idx == st.session_state.user_team_num:
+            label += " (YOU)"
+        col.markdown(f"**{label}**")
+
+    for r in range(1, num_rounds + 1):
+        r_cols = st.columns(num_teams)
+        for t in range(1, num_teams + 1):
+            if r % 2 == 1:
+                p_num = (r - 1) * num_teams + t
+            else:
+                p_num = (r - 1) * num_teams + (num_teams - t + 1)
+            
+            match = drafted_players[drafted_players['Pick_Num'] == p_num]
+            
+            with r_cols[t-1]:
+                if not match.empty:
+                    player_data = match.iloc[0]
+                    p_name = str(player_data['Name'])
+                    p_pos = str(player_data['Pos'])
+                    p_team = str(player_data['Team'])
+                    pos_class = f"draft-card-{p_pos.lower()}"
+                    
                     card_html = f"""
-                    <div class="rec-card">
-                        <span class="badge-{pos_lower}">{s_player['Pos']}</span> <b>{s_player['Name']}</b> ({s_player['Team']})<br/>
-                        <small><b>Rank:</b> #{s_player['Rank']} | <b>Tier:</b> {s_player['Tier']}</small><br/>
-                        <small style="color: #58a6ff;">{s_player['Reason']}</small>
+                    <div class="draft-card {pos_class}">
+                        <b>{p_name}</b><br/>
+                        <small>{p_pos} - {p_team} (#{p_num})</small>
                     </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
+                else:
+                    card_html = f'<div class="draft-card draft-card-empty"><small>#{p_num}</small></div>'
+                    st.markdown(card_html, unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------
+# TAB 3: TEAM ROSTERS & BREAKDOWN
+# -----------------------------------------------------------------------------
+with tab_rosters:
+    st.subheader("Team Rosters & Positional Needs")
     
+    selected_team_num = st.selectbox(
+        "Select Team",
+        options=list(range(1, st.session_state.num_teams + 1)),
+        format_func=lambda x: f"Team {x}" + (" (YOU)" if x == st.session_state.user_team_num else "")
+    )
+    
+    team_roster = st.session_state.players_df[
+        st.session_state.pl
