@@ -24,29 +24,31 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State
+# Initialize Session State with Draft Sharks Superflex Data
 if "players" not in st.session_state:
     st.session_state.players = [
-        {"id": 1, "name": "Josh Allen", "pos": "QB", "team": "BUF", "adp": 1.2, "proj": 395.4, "tier": 1, "bye": 12},
-        {"id": 2, "name": "Patrick Mahomes", "pos": "QB", "team": "KC", "adp": 2.1, "proj": 382.1, "tier": 1, "bye": 6},
-        {"id": 3, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "adp": 3.4, "proj": 375.0, "tier": 1, "bye": 14},
-        {"id": 4, "name": "Jalen Hurts", "pos": "QB", "team": "PHI", "adp": 4.0, "proj": 368.5, "tier": 1, "bye": 5},
-        {"id": 5, "name": "C.J. Stroud", "pos": "QB", "team": "HOU", "adp": 5.2, "proj": 345.2, "tier": 2, "bye": 14},
-        {"id": 6, "name": "Christian McCaffrey", "pos": "RB", "team": "SF", "adp": 5.8, "proj": 330.0, "tier": 1, "bye": 9},
-        {"id": 7, "name": "Anthony Richardson", "pos": "QB", "team": "IND", "adp": 6.5, "proj": 340.0, "tier": 2, "bye": 14},
-        {"id": 8, "name": "Joe Burrow", "pos": "QB", "team": "CIN", "adp": 7.1, "proj": 338.4, "tier": 2, "bye": 12},
-        {"id": 9, "name": "Ceedee Lamb", "pos": "WR", "team": "DAL", "adp": 8.0, "proj": 325.6, "tier": 1, "bye": 7},
-        {"id": 10, "name": "Tyreek Hill", "pos": "WR", "team": "MIA", "adp": 9.2, "proj": 318.0, "tier": 1, "bye": 6},
-        {"id": 11, "name": "Ja'Marr Chase", "pos": "WR", "team": "CIN", "adp": 10.5, "proj": 312.4, "tier": 1, "bye": 12},
-        {"id": 12, "name": "Kyler Murray", "pos": "QB", "team": "ARI", "adp": 12.0, "proj": 315.0, "tier": 2, "bye": 11},
-        {"id": 13, "name": "Bijan Robinson", "pos": "RB", "team": "ATL", "adp": 13.1, "proj": 290.2, "tier": 1, "bye": 12},
-        {"id": 14, "name": "Breece Hall", "pos": "RB", "team": "NYJ", "adp": 14.2, "proj": 285.5, "tier": 1, "bye": 12},
-        {"id": 15, "name": "Dak Prescott", "pos": "QB", "team": "DAL", "adp": 16.0, "proj": 308.1, "tier": 3, "bye": 7},
-        {"id": 16, "name": "Amon-Ra St. Brown", "pos": "WR", "team": "DET", "adp": 17.5, "proj": 295.0, "tier": 2, "bye": 5},
-        {"id": 17, "name": "Jordan Love", "pos": "QB", "team": "GB", "adp": 19.0, "proj": 299.8, "tier": 3, "bye": 10},
-        {"id": 18, "name": "Brock Bowers", "pos": "TE", "team": "LV", "adp": 22.0, "proj": 210.0, "tier": 1, "bye": 10},
-        {"id": 19, "name": "Trevor Lawrence", "pos": "QB", "team": "JAX", "adp": 24.5, "proj": 288.0, "tier": 3, "bye": 12},
-        {"id": 20, "name": "Sam LaPorta", "pos": "TE", "team": "DET", "adp": 26.0, "proj": 215.4, "tier": 1, "bye": 5}
+        {"id": 1, "name": "Josh Allen", "pos": "QB", "team": "BUF", "adp": 1.01, "proj": 363.0, "tier": 1, "bye": 7},
+        {"id": 2, "name": "Jahmyr Gibbs", "pos": "RB", "team": "DET", "adp": 1.04, "proj": 273.0, "tier": 1, "bye": 6},
+        {"id": 3, "name": "Bijan Robinson", "pos": "RB", "team": "ATL", "adp": 1.02, "proj": 274.0, "tier": 1, "bye": 11},
+        {"id": 4, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "adp": 1.11, "proj": 328.0, "tier": 1, "bye": 13},
+        {"id": 5, "name": "Puka Nacua", "pos": "WR", "team": "LAR", "adp": 1.06, "proj": 208.0, "tier": 1, "bye": 11},
+        {"id": 6, "name": "Drake Maye", "pos": "QB", "team": "NE", "adp": 1.03, "proj": 315.0, "tier": 1, "bye": 11},
+        {"id": 7, "name": "Joe Burrow", "pos": "QB", "team": "CIN", "adp": 1.10, "proj": 311.0, "tier": 1, "bye": 6},
+        {"id": 8, "name": "Ja'Marr Chase", "pos": "WR", "team": "CIN", "adp": 1.05, "proj": 186.0, "tier": 1, "bye": 6},
+        {"id": 9, "name": "Jaxon Smith-Njigba", "pos": "WR", "team": "SEA", "adp": 1.07, "proj": 187.0, "tier": 1, "bye": 11},
+        {"id": 10, "name": "Christian McCaffrey", "pos": "RB", "team": "SF", "adp": 1.09, "proj": 241.0, "tier": 2, "bye": 8},
+        {"id": 11, "name": "Jonathan Taylor", "pos": "RB", "team": "IND", "adp": 1.12, "proj": 260.0, "tier": 2, "bye": 13},
+        {"id": 12, "name": "Jayden Daniels", "pos": "QB", "team": "WAS", "adp": 1.08, "proj": 315.0, "tier": 2, "bye": 7},
+        {"id": 13, "name": "Jalen Hurts", "pos": "QB", "team": "PHI", "adp": 3.01, "proj": 313.0, "tier": 2, "bye": 10},
+        {"id": 14, "name": "James Cook", "pos": "RB", "team": "BUF", "adp": 2.01, "proj": 232.0, "tier": 2, "bye": 7},
+        {"id": 15, "name": "Derrick Henry", "pos": "RB", "team": "BAL", "adp": 4.09, "proj": 240.0, "tier": 2, "bye": 13},
+        {"id": 16, "name": "Amon-Ra St. Brown", "pos": "WR", "team": "DET", "adp": 2.04, "proj": 171.0, "tier": 2, "bye": 6},
+        {"id": 17, "name": "CeeDee Lamb", "pos": "WR", "team": "DAL", "adp": 2.03, "proj": 163.0, "tier": 2, "bye": 14},
+        {"id": 18, "name": "Justin Jefferson", "pos": "WR", "team": "MIN", "adp": 2.05, "proj": 154.0, "tier": 3, "bye": 6},
+        {"id": 19, "name": "Saquon Barkley", "pos": "RB", "team": "PHI", "adp": 3.05, "proj": 216.0, "tier": 3, "bye": 10},
+        {"id": 20, "name": "Trevor Lawrence", "pos": "QB", "team": "JAC", "adp": 3.07, "proj": 300.0, "tier": 3, "bye": 7},
+        {"id": 21, "name": "Justin Herbert", "pos": "QB", "team": "LAC", "adp": 2.12, "proj": 301.0, "tier": 3, "bye": 7},
+        {"id": 22, "name": "Caleb Williams", "pos": "QB", "team": "CHI", "adp": 2.02, "proj": 294.0, "tier": 3, "bye": 10}
     ]
 
 if "drafted_log" not in st.session_state:
@@ -84,7 +86,7 @@ current_round = (st.session_state.current_pick - 1) // 10 + 1
 col_head1, col_head2, col_head3 = st.columns([3, 2, 1])
 with col_head1:
     st.title("⚡ SuperFlex Draft App")
-    st.caption("Live Mock & Draft Companion Engine (SF Edition)")
+    st.caption("Draft Sharks Superflex Rankings Edition")
 with col_head2:
     st.markdown(f"**Current Round / Pick:** Round {current_round} • Pick {st.session_state.current_pick}")
 with col_head3:
@@ -126,12 +128,10 @@ with sidebar_col:
                     st.text(f"{w_player['pos']} - {w_player['name']}")
                 with col_q2:
                     if st.button("Draft", key=f"q_{w_player['id']}"):
-                        # Draft logic trigger
                         player = w_player
                         st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
                         st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
                         
-                        # Assign roster slot
                         assigned = False
                         if player["pos"] == "QB":
                             for s in st.session_state.roster:
@@ -169,7 +169,7 @@ with sidebar_col:
 
 # --- CENTER COLUMN: PLAYER POOL ---
 with main_col:
-    st.subheader("📋 Available Player Pool")
+    st.subheader("📋 Available Player Pool (Draft Sharks Ranked)")
     
     col_f1, col_f2 = st.columns([2, 2])
     with col_f1:
@@ -177,7 +177,6 @@ with main_col:
     with col_f2:
         selected_pos = st.selectbox("Filter Position", ["ALL", "QB", "RB", "WR", "TE"])
 
-    # Filter logic
     filtered_players = st.session_state.players
     if selected_pos != "ALL":
         filtered_players = [p for p in filtered_players if p["pos"] == selected_pos]
@@ -213,7 +212,6 @@ with main_col:
                         st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
                         st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
                         
-                        # Assign roster slot
                         assigned = False
                         if player["pos"] == "QB":
                             for s in st.session_state.roster:
@@ -257,11 +255,11 @@ with ai_col:
     qb_count = sum(1 for s in st.session_state.roster if s["position"] == "QB" and s["player"] is not None)
     
     if qb_count == 0 and current_round <= 3:
-        advice = "In Superflex, secure your QB1 early. Elite tier signal-callers provide unmatched positional advantage over starting WRs/RBs."
+        advice = "Draft Sharks data emphasizes early quarterback value. Secure your tier-1 signal caller or elite dual-threat cornerstone now."
     elif qb_count == 1 and current_round <= 6:
-        advice = "You need a second starter for your Superflex slot. Target Tier 2/3 QBs before the run dries up."
+        advice = "With one QB down, target your Superflex slot anchor before the tier drop-off at quarterback occurs."
     else:
-        advice = "QBs are scarce. Look for elite WR/RB value drops or stash high-upside dual-threat backup QBs."
+        advice = "Balance your roster by pulling high-value positional players (Gibbs, Bijan, or elite WRs) while monitoring tier-based QB backups."
         
     st.info(advice)
     
@@ -274,4 +272,4 @@ with ai_col:
             for log in st.session_state.drafted_log:
                 p = log["player"]
                 st.markdown(f"**Pick {log['pick']}**: {p['name']} ({p['pos']} - {p['team']})")
-                
+            
