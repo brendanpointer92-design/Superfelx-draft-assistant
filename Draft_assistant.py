@@ -5,22 +5,25 @@ import streamlit as st
 
 # Page Configuration
 st.set_page_config(
-    page_title="Superflex Draft Assistant Pro", page_icon="🏈", layout="wide"
+    page_title="Superflex Draft Assistant Pro", page_icon="🏈", layout="centered"
 )
 
-# Custom CSS for Position Color Coding & Visual Polish
+# Custom CSS for Mobile Optimization & Polish
 st.markdown(
     """
     <style>
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 4px;
+        display: flex;
+        flex-wrap: wrap;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #1e293b;
         border-radius: 6px;
         color: #f8fafc;
-        padding: 10px 20px;
+        padding: 8px 12px;
         font-weight: 600;
+        font-size: 0.85rem;
     }
     .stTabs [aria-selected="true"] {
         background-color: #3b82f6 !important;
@@ -28,10 +31,18 @@ st.markdown(
     }
     
     /* Position Badge Styles */
-    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #3b82f6; }
-    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #10b981; }
-    .badge-wr { background-color: #78350f; color: #fde68a; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #f59e0b; }
-    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; border: 1px solid #a855f7; }
+    .badge-qb { background-color: #1e3a8a; color: #93c5fd; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #3b82f6; }
+    .badge-rb { background-color: #064e3b; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #10b981; }
+    .badge-wr { background-color: #78350f; color: #fde68a; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #f59e0b; }
+    .badge-te { background-color: #581c87; color: #d8b4fe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; border: 1px solid #a855f7; }
+    
+    .player-card {
+        background-color: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+    }
     </style>
 """,
     unsafe_allow_html=True,
@@ -72,9 +83,7 @@ user_draft_slot = int(selected_slot_str.replace("Pick ", ""))
 st.sidebar.markdown("---")
 st.sidebar.subheader("🤖 Simulation & Auto-Draft")
 auto_draft_enabled = st.sidebar.toggle(
-    "Enable Auto-Draft Automation",
-    value=False,
-    help="When turned on, the app automatically runs simulated picks for opposing teams round-by-round.",
+    "Enable Auto-Draft Automation", value=False
 )
 auto_speed = st.sidebar.slider(
     "Auto-Draft Speed (seconds)", 0.5, 3.0, 1.0, 0.5
@@ -94,7 +103,7 @@ def get_position_badge(pos):
     return f"<span>{pos}</span>"
 
 
-# Comprehensive 150-Player Database with Tiers, ADP, and Projected Points
+# Comprehensive 150-Player Database
 @st.cache_data
 def load_150_players():
     base_players = [
@@ -718,20 +727,18 @@ round_n, current_slot, is_user_turn = get_current_picker(
 )
 
 # Top Status Indicator Bar
-status_col1, status_col2, status_col3 = st.columns(3)
-status_col1.metric("Current Overall Pick", f"#{current_pick}")
-status_col2.metric("Draft Round", f"Round {round_n}")
+st.metric("Current Overall Pick / Round", f"#{current_pick} (Round {round_n})")
 
 if is_user_turn:
-    status_col3.markdown(f"### 🟢 **YOUR TURN!** (Pick {user_draft_slot})")
+    st.markdown("### 🟢 **YOUR TURN TO DRAFT!**")
 else:
-    status_col3.markdown(f"### ⏳ **AI Picking:** Team Slot {current_slot}")
+    st.markdown(f"### ⏳ **AI Picking:** Team Slot {current_slot}")
 
 st.markdown("---")
 
 # --- MAIN SCREEN TABS ---
 tab_draft, tab_board, tab_roster, tab_log = st.tabs(
-    ["🎯 Draft Room", "🏟️ Full Draft Board", "📋 My Roster", "🤖 AI Auto-Draft Log"]
+    ["🎯 Draft", "🏟️ Board", "📋 Roster", "🤖 Log"]
 )
 
 
@@ -760,7 +767,7 @@ def draft_player(p_obj, is_user_pick=True):
             r["BN"].append(p_obj)
     else:
         st.session_state.auto_draft_history.append(
-            f"Round {round_n} (Pick {current_pick}) - AI Team {current_slot} drafted: **{p_obj['name']}** ({p_obj['pos']} - {p_obj['team']})"
+            f"R{round_n} (Pick {current_pick}) - AI Team {current_slot}: **{p_obj['name']}** ({p_obj['pos']})"
         )
 
 
@@ -776,4 +783,8 @@ if auto_draft_enabled and not is_user_turn and current_pick <= 150:
         st.rerun()
 
 
-# 
+# --- TAB 1: DRAFT ROOM ---
+with tab_draft:
+    st.subheader("Available Player Pool")
+
+    s
