@@ -239,7 +239,7 @@ def undo_last_pick():
         st.session_state.current_pick = last_pick
 
 def get_badge_html(pos):
-    return '<span class="badge-' + str(pos).lower() + '">' + str(pos) + '</span>'
+    return f'<span class="badge-{str(pos).lower()}">{str(pos)}</span>'
 
 def evaluate_team_needs(team_num):
     """Evaluates positional need scores (High, Med, Low) based on current roster."""
@@ -250,7 +250,7 @@ def evaluate_team_needs(team_num):
     for pos, target in ROSTER_TARGETS.items():
         curr = counts.get(pos, 0)
         if curr < target:
-            # Urgent need if missing core starters (e.g. 0 QB or 0 RB)
+            # Urgent need if missing core starters
             needs[pos] = 2.0 if curr == 0 else 1.2
         elif curr == target:
             needs[pos] = 0.8 # Moderate need for depth/flex
@@ -380,9 +380,12 @@ with tab_cheat:
             for idx, (_, s_player) in enumerate(suggestions.iterrows()):
                 with s_cols[idx]:
                     pos_lower = str(s_player['Pos']).lower()
-                    card_html = (
-                        '<div class="rec-card">'
-                        + '<span class="badge-' + pos_lower + '">' + str(s_player['Pos']) + '</span> '
-                        + '<b>' + str(s_player['Name']) + '</b> (' + str(s_player['Team']) + ')<br/>'
-                        + '<small><b>Rank:</b> #' + str(s_player['Rank']) + ' | <b>Tier:</b> ' + str(s_player['Tier']) + '</small><br/>'
-                        + '<small style="color: #58a6ff;">' + str(s_player
+                    card_html = f"""
+                    <div class="rec-card">
+                        <span class="badge-{pos_lower}">{s_player['Pos']}</span> <b>{s_player['Name']}</b> ({s_player['Team']})<br/>
+                        <small><b>Rank:</b> #{s_player['Rank']} | <b>Tier:</b> {s_player['Tier']}</small><br/>
+                        <small style="color: #58a6ff;">{s_player['Reason']}</small>
+                    </div>
+                    """
+                    st.markdown(card_html, unsafe_allow_html=True)
+    
