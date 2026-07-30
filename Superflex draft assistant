@@ -1,0 +1,325 @@
+import pandas as pd
+import streamlit as st
+
+# Set page config
+st.set_page_config(
+    page_title="10-Team Superflex Draft Assistant",
+    page_icon="🏈",
+    layout="wide",
+)
+
+st.title("🏈 10-Team NFL Superflex Draft Assistant")
+st.caption(
+    "Interactive live draft tracker & value finder tailored for 10-Team Superflex formats."
+)
+
+# Sample Data Initialization (Consensus Superflex Tiers)
+DEFAULT_PLAYERS = [
+    {
+        "Rank": 1,
+        "Name": "Josh Allen",
+        "Pos": "QB",
+        "Team": "BUF",
+        "Tier": 1,
+        "Bye": 7,
+    },
+    {
+        "Rank": 2,
+        "Name": "Lamar Jackson",
+        "Pos": "QB",
+        "Team": "BAL",
+        "Tier": 1,
+        "Bye": 13,
+    },
+    {
+        "Rank": 3,
+        "Name": "Drake Maye",
+        "Pos": "QB",
+        "Team": "NE",
+        "Tier": 1,
+        "Bye": 11,
+    },
+    {
+        "Rank": 4,
+        "Name": "Joe Burrow",
+        "Pos": "QB",
+        "Team": "CIN",
+        "Tier": 1,
+        "Bye": 6,
+    },
+    {
+        "Rank": 5,
+        "Name": "Jayden Daniels",
+        "Pos": "QB",
+        "Team": "WAS",
+        "Tier": 1,
+        "Bye": 7,
+    },
+    {
+        "Rank": 6,
+        "Name": "Jalen Hurts",
+        "Pos": "QB",
+        "Team": "PHI",
+        "Tier": 2,
+        "Bye": 10,
+    },
+    {
+        "Rank": 7,
+        "Name": "Ja'Marr Chase",
+        "Pos": "WR",
+        "Team": "CIN",
+        "Tier": 1,
+        "Bye": 6,
+    },
+    {
+        "Rank": 8,
+        "Name": "Puka Nacua",
+        "Pos": "WR",
+        "Team": "LAR",
+        "Tier": 1,
+        "Bye": 11,
+    },
+    {
+        "Rank": 9,
+        "Name": "Caleb Williams",
+        "Pos": "QB",
+        "Team": "CHI",
+        "Tier": 2,
+        "Bye": 10,
+    },
+    {
+        "Rank": 10,
+        "Name": "Jahmyr Gibbs",
+        "Pos": "RB",
+        "Team": "DET",
+        "Tier": 1,
+        "Bye": 6,
+    },
+    {
+        "Rank": 11,
+        "Name": "Justin Herbert",
+        "Pos": "QB",
+        "Team": "LAC",
+        "Tier": 2,
+        "Bye": 7,
+    },
+    {
+        "Rank": 12,
+        "Name": "Bijan Robinson",
+        "Pos": "RB",
+        "Team": "ATL",
+        "Tier": 1,
+        "Bye": 11,
+    },
+    {
+        "Rank": 13,
+        "Name": "Jaxon Smith-Njigba",
+        "Pos": "WR",
+        "Team": "SEA",
+        "Tier": 2,
+        "Bye": 11,
+    },
+    {
+        "Rank": 14,
+        "Name": "Trevor Lawrence",
+        "Pos": "QB",
+        "Team": "JAC",
+        "Tier": 2,
+        "Bye": 7,
+    },
+    {
+        "Rank": 15,
+        "Name": "Dak Prescott",
+        "Pos": "QB",
+        "Team": "DAL",
+        "Tier": 2,
+        "Bye": 14,
+    },
+    {
+        "Rank": 16,
+        "Name": "Amon-Ra St. Brown",
+        "Pos": "WR",
+        "Team": "DET",
+        "Tier": 2,
+        "Bye": 6,
+    },
+    {
+        "Rank": 17,
+        "Name": "Christian McCaffrey",
+        "Pos": "RB",
+        "Team": "SF",
+        "Tier": 2,
+        "Bye": 8,
+    },
+    {
+        "Rank": 18,
+        "Name": "CeeDee Lamb",
+        "Pos": "WR",
+        "Team": "DAL",
+        "Tier": 2,
+        "Bye": 14,
+    },
+    {
+        "Rank": 19,
+        "Name": "Brock Purdy",
+        "Pos": "QB",
+        "Team": "SF",
+        "Tier": 3,
+        "Bye": 8,
+    },
+    {
+        "Rank": 20,
+        "Name": "Jonathan Taylor",
+        "Pos": "RB",
+        "Team": "IND",
+        "Tier": 2,
+        "Bye": 13,
+    },
+    {
+        "Rank": 21,
+        "Name": "Justin Jefferson",
+        "Pos": "WR",
+        "Team": "MIN",
+        "Tier": 2,
+        "Bye": 6,
+    },
+    {
+        "Rank": 22,
+        "Name": "James Cook",
+        "Pos": "RB",
+        "Team": "BUF",
+        "Tier": 2,
+        "Bye": 7,
+    },
+    {
+        "Rank": 23,
+        "Name": "Bo Nix",
+        "Pos": "QB",
+        "Team": "DEN",
+        "Tier": 3,
+        "Bye": 14,
+    },
+    {
+        "Rank": 24,
+        "Name": "Patrick Mahomes",
+        "Pos": "QB",
+        "Team": "KC",
+        "Tier": 3,
+        "Bye": 10,
+    },
+    {
+        "Rank": 25,
+        "Name": "Brock Bowers",
+        "Pos": "TE",
+        "Team": "LV",
+        "Tier": 1,
+        "Bye": 10,
+    },
+]
+
+# Initialize Session States
+if "drafted_players" not in st.session_state:
+    st.session_state.drafted_players = []
+
+if "my_roster" not in st.session_state:
+    st.session_state.my_roster = []
+
+# Sidebar Controls
+st.sidebar.header("Draft Controls")
+pick_number = st.sidebar.number_input(
+    "Current Overall Pick", min_value=1, max_value=160, value=1
+)
+user_draft_spot = st.sidebar.number_input(
+    "Your Draft Spot (1-10)", min_value=1, max_value=10, value=1
+)
+
+
+def reset_draft():
+    st.session_state.drafted_players = []
+    st.session_state.my_roster = []
+
+
+st.sidebar.button("Reset Draft", on_click=reset_draft)
+
+# Calculate Current Round & Draft State
+current_round = ((pick_number - 1) // 10) + 1
+current_pick_in_round = ((pick_number - 1) % 10) + 1
+
+# Check if on the clock
+is_user_pick = False
+if current_round % 2 != 0:  # Odd round
+    if current_pick_in_round == user_draft_spot:
+        is_user_pick = True
+else:  # Even round (Snake)
+    if current_pick_in_round == (11 - user_draft_spot):
+        is_user_pick = True
+
+# Main Board Layout
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader(
+        f"Round {current_round}, Pick {current_pick_in_round} (Overall: #{pick_number})"
+    )
+    if is_user_pick:
+        st.success("🚨 YOU ARE ON THE CLOCK! 🚨")
+
+    # Filter available players
+    df_all = pd.DataFrame(DEFAULT_PLAYERS)
+    available_df = df_all[
+        ~df_all["Name"].isin(st.session_state.drafted_players)
+    ]
+
+    st.write("### Best Available Players")
+
+    # Quick Draft Actions
+    selected_player = st.selectbox(
+        "Select player taken at this pick:", available_df["Name"].tolist()
+    )
+
+    btn_col1, btn_col2 = st.columns(2)
+    with btn_col1:
+        if st.button("Drafted by Someone Else"):
+            st.session_state.drafted_players.append(selected_player)
+            st.rerun()
+
+    with btn_col2:
+        if st.button("Draft to MY TEAM"):
+            st.session_state.drafted_players.append(selected_player)
+            st.session_state.my_roster.append(selected_player)
+            st.rerun()
+
+    # Available Table Display
+    pos_filter = st.multiselect(
+        "Filter Position:",
+        ["QB", "RB", "WR", "TE"],
+        default=["QB", "RB", "WR", "TE"],
+    )
+    filtered_df = available_df[available_df["Pos"].isin(pos_filter)]
+    st.dataframe(filtered_df, use_container_width=True, hide_index=True)
+
+with col2:
+    st.subheader("📋 My Roster")
+    my_roster_df = df_all[df_all["Name"].isin(st.session_state.my_roster)]
+
+    qb_count = len(my_roster_df[my_roster_df["Pos"] == "QB"])
+    rb_count = len(my_roster_df[my_roster_df["Pos"] == "RB"])
+    wr_count = len(my_roster_df[my_roster_df["Pos"] == "WR"])
+    te_count = len(my_roster_df[my_roster_df["Pos"] == "TE"])
+
+    st.metric("Quarterbacks (Goal: 3)", f"{qb_count}/3")
+    st.metric("Running Backs", f"{rb_count}")
+    st.metric("Wide Receivers", f"{wr_count}")
+    st.metric("Tight Ends", f"{te_count}")
+
+    st.table(my_roster_df[["Name", "Pos", "Tier", "Bye"]])
+
+    # Superflex Strategic Tip
+    st.markdown("---")
+    st.markdown("### 💡 Superflex Draft Advice")
+    if qb_count == 0 and current_round >= 2:
+        st.warning("⚠️ Try not to leave Round 2 without at least 1 QB!")
+    elif qb_count == 1 and current_round >= 5:
+        st.info("💡 Consider targeting your QB2 in Rounds 5-7.")
+    elif qb_count >= 2:
+        st.success("✅ Solid QB core. Focus on Value at WR/RB.")
