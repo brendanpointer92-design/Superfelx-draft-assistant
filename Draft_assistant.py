@@ -761,7 +761,4 @@ with tab_draft:
                     st.session_state.queue_ids.remove(qrow["id"])
                     st.rerun()
 
-    with col_left:
-        st.subheader("Available Player Pool (Top 150)")
-
-        f1, f2 = st.col
+    
