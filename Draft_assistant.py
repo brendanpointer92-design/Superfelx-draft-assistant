@@ -7,7 +7,7 @@ import numpy as np
 # 1. PAGE CONFIGURATION
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="2026 Fantasy Football Elite Draft Assistant Pro",
+    page_title="2026 Custom League Fantasy Draft Assistant",
     page_icon="🏈",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -28,68 +28,57 @@ st.markdown("""
     .badge-te { background-color: #e9c46a; color: #1d3557; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-dst { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     .badge-k { background-color: #d62828; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-    
-    .draft-card {
-        border: 1px solid #30363d;
-        border-radius: 6px;
-        padding: 6px;
-        margin-bottom: 4px;
-        font-size: 0.75rem;
-        background-color: #161b22;
-        text-align: center;
-        min-height: 52px;
-    }
-    .draft-card-qb { border-left: 4px solid #e63946; }
-    .draft-card-rb { border-left: 4px solid #2a9d8f; }
-    .draft-card-wr { border-left: 4px solid #457b9d; }
-    .draft-card-te { border-left: 4px solid #e9c46a; }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 3. EXPANDED DEFAULT DATASET (WITH BASELINE PROJECTIONS & BYE WEEKS)
+# 3. BASE DATASET WITH CUSTOM LEAGUE ADJUSTED PROJECTIONS
 # -----------------------------------------------------------------------------
+# Note: Adjusted for your specific scoring rules:
+# - Passing TDs are 4 pts (slight downgrade for pure pocket QBs like Joe Burrow, boost for dual-threats).
+# - Rushing/Receiving 1st Downs (+0.5 pts) significantly boost high-volume RBs and chain-moving slot WRs.
+# - Heavy carry/completion bonuses (+2 for 20+ carries / 25+ completions) elevate workhorse running backs and high-volume QBs.
 DEFAULT_PLAYERS = [
-    {"Rank": 1, "Name": "Josh Allen", "Pos": "QB", "Team": "BUF", "Tier": 1, "ProjPts": 395.0, "Bye": 12},
-    {"Rank": 2, "Name": "Lamar Jackson", "Pos": "QB", "Team": "BAL", "Tier": 1, "ProjPts": 380.0, "Bye": 14},
-    {"Rank": 3, "Name": "Drake Maye", "Pos": "QB", "Team": "NE", "Tier": 1, "ProjPts": 345.0, "Bye": 11},
-    {"Rank": 4, "Name": "Joe Burrow", "Pos": "QB", "Team": "CIN", "Tier": 1, "ProjPts": 350.0, "Bye": 12},
-    {"Rank": 5, "Name": "Jayden Daniels", "Pos": "QB", "Team": "WAS", "Tier": 2, "ProjPts": 340.0, "Bye": 14},
-    {"Rank": 6, "Name": "Jalen Hurts", "Pos": "QB", "Team": "PHI", "Tier": 2, "ProjPts": 355.0, "Bye": 5},
-    {"Rank": 7, "Name": "Jahmyr Gibbs", "Pos": "RB", "Team": "DET", "Tier": 2, "ProjPts": 310.0, "Bye": 5},
-    {"Rank": 8, "Name": "Bijan Robinson", "Pos": "RB", "Team": "ATL", "Tier": 2, "ProjPts": 320.0, "Bye": 12},
-    {"Rank": 9, "Name": "Ja'Marr Chase", "Pos": "WR", "Team": "CIN", "Tier": 2, "ProjPts": 330.0, "Bye": 12},
-    {"Rank": 10, "Name": "Caleb Williams", "Pos": "QB", "Team": "CHI", "Tier": 2, "ProjPts": 315.0, "Bye": 7},
-    {"Rank": 11, "Name": "Justin Herbert", "Pos": "QB", "Team": "LAC", "Tier": 2, "ProjPts": 305.0, "Bye": 5},
-    {"Rank": 12, "Name": "Puka Nacua", "Pos": "WR", "Team": "LAR", "Tier": 2, "ProjPts": 310.0, "Bye": 6},
-    {"Rank": 13, "Name": "Dak Prescott", "Pos": "QB", "Team": "DAL", "Tier": 3, "ProjPts": 300.0, "Bye": 7},
-    {"Rank": 14, "Name": "Trevor Lawrence", "Pos": "QB", "Team": "JAC", "Tier": 3, "ProjPts": 290.0, "Bye": 12},
-    {"Rank": 15, "Name": "Jaxon Smith-Njigba", "Pos": "WR", "Team": "SEA", "Tier": 3, "ProjPts": 285.0, "Bye": 10},
-    {"Rank": 16, "Name": "Amon-Ra St. Brown", "Pos": "WR", "Team": "DET", "Tier": 3, "ProjPts": 305.0, "Bye": 5},
-    {"Rank": 17, "Name": "Jonathan Taylor", "Pos": "RB", "Team": "IND", "Tier": 3, "ProjPts": 275.0, "Bye": 14},
-    {"Rank": 18, "Name": "Brock Purdy", "Pos": "QB", "Team": "SF", "Tier": 3, "ProjPts": 295.0, "Bye": 9},
-    {"Rank": 19, "Name": "Christian McCaffrey", "Pos": "RB", "Team": "SF", "Tier": 3, "ProjPts": 290.0, "Bye": 9},
-    {"Rank": 20, "Name": "Jaxson Dart", "Pos": "QB", "Team": "NYG", "Tier": 3, "ProjPts": 280.0, "Bye": 11},
-    {"Rank": 21, "Name": "CeeDee Lamb", "Pos": "WR", "Team": "DAL", "Tier": 4, "ProjPts": 315.0, "Bye": 7},
-    {"Rank": 22, "Name": "Justin Jefferson", "Pos": "WR", "Team": "MIN", "Tier": 4, "ProjPts": 320.0, "Bye": 6},
-    {"Rank": 23, "Name": "Saquon Barkley", "Pos": "RB", "Team": "PHI", "Tier": 4, "ProjPts": 285.0, "Bye": 5},
-    {"Rank": 24, "Name": "James Cook", "Pos": "RB", "Team": "BUF", "Tier": 4, "ProjPts": 250.0, "Bye": 12},
-    {"Rank": 25, "Name": "Derrick Henry", "Pos": "RB", "Team": "BAL", "Tier": 4, "ProjPts": 260.0, "Bye": 14},
-    {"Rank": 26, "Name": "Malik Nabers", "Pos": "WR", "Team": "NYG", "Tier": 4, "ProjPts": 275.0, "Bye": 11},
-    {"Rank": 27, "Name": "Nico Collins", "Pos": "WR", "Team": "HOU", "Tier": 4, "ProjPts": 270.0, "Bye": 14},
-    {"Rank": 28, "Name": "Brian Thomas Jr.", "Pos": "WR", "Team": "JAC", "Tier": 4, "ProjPts": 260.0, "Bye": 12},
-    {"Rank": 29, "Name": "Patrick Mahomes II", "Pos": "QB", "Team": "KC", "Tier": 4, "ProjPts": 325.0, "Bye": 6},
-    {"Rank": 30, "Name": "Brock Bowers", "Pos": "TE", "Team": "LV", "Tier": 5, "ProjPts": 240.0, "Bye": 10},
-    {"Rank": 31, "Name": "Trey McBride", "Pos": "TE", "Team": "ARI", "Tier": 5, "ProjPts": 230.0, "Bye": 11},
-    {"Rank": 32, "Name": "Bo Nix", "Pos": "QB", "Team": "DEN", "Tier": 5, "ProjPts": 270.0, "Bye": 14},
-    {"Rank": 33, "Name": "Kyler Murray", "Pos": "QB", "Team": "MIN", "Tier": 5, "ProjPts": 285.0, "Bye": 6},
-    {"Rank": 34, "Name": "Bucky Irving", "Pos": "RB", "Team": "TB", "Tier": 5, "ProjPts": 225.0, "Bye": 11},
-    {"Rank": 35, "Name": "De'Von Achane", "Pos": "RB", "Team": "MIA", "Tier": 5, "ProjPts": 240.0, "Bye": 6},
-    {"Rank": 36, "Name": "Ashton Jeanty", "Pos": "RB", "Team": "LV", "Tier": 5, "ProjPts": 235.0, "Bye": 10},
+    {"Rank": 1, "Name": "Josh Allen", "Pos": "QB", "Team": "BUF", "Tier": 1, "ProjPts": 418.0, "Bye": 12},
+    {"Rank": 2, "Name": "Lamar Jackson", "Pos": "QB", "Team": "BAL", "Tier": 1, "ProjPts": 405.0, "Bye": 14},
+    {"Rank": 3, "Name": "Bijan Robinson", "Pos": "RB", "Team": "ATL", "Tier": 1, "ProjPts": 355.0, "Bye": 12},
+    {"Rank": 4, "Name": "Jahmyr Gibbs", "Pos": "RB", "Team": "DET", "Tier": 1, "ProjPts": 340.0, "Bye": 5},
+    {"Rank": 5, "Name": "Ja'Marr Chase", "Pos": "WR", "Team": "CIN", "Tier": 2, "ProjPts": 335.0, "Bye": 12},
+    {"Rank": 6, "Name": "Jayden Daniels", "Pos": "QB", "Team": "WAS", "Tier": 2, "ProjPts": 365.0, "Bye": 14},
+    {"Rank": 7, "Name": "Jalen Hurts", "Pos": "QB", "Team": "PHI", "Tier": 2, "ProjPts": 375.0, "Bye": 5},
+    {"Rank": 8, "Name": "Justin Jefferson", "Pos": "WR", "Team": "MIN", "Tier": 2, "ProjPts": 330.0, "Bye": 6},
+    {"Rank": 9, "Name": "CeeDee Lamb", "Pos": "WR", "Team": "DAL", "Tier": 2, "ProjPts": 325.0, "Bye": 7},
+    {"Rank": 10, "Name": "Puka Nacua", "Pos": "WR", "Team": "LAR", "Tier": 2, "ProjPts": 320.0, "Bye": 6},
+    {"Rank": 11, "Name": "Joe Burrow", "Pos": "QB", "Team": "CIN", "Tier": 2, "ProjPts": 345.0, "Bye": 12},
+    {"Rank": 12, "Name": "Drake Maye", "Pos": "QB", "Team": "NE", "Tier": 3, "ProjPts": 340.0, "Bye": 11},
+    {"Rank": 13, "Name": "Jonathan Taylor", "Pos": "RB", "Team": "IND", "Tier": 3, "ProjPts": 310.0, "Bye": 14},
+    {"Rank": 14, "Name": "Saquon Barkley", "Pos": "RB", "Team": "PHI", "Tier": 3, "ProjPts": 315.0, "Bye": 5},
+    {"Rank": 15, "Name": "Amon-Ra St. Brown", "Pos": "WR", "Team": "DET", "Tier": 3, "ProjPts": 315.0, "Bye": 5},
+    {"Rank": 16, "Name": "Christian McCaffrey", "Pos": "RB", "Team": "SF", "Tier": 3, "ProjPts": 305.0, "Bye": 9},
+    {"Rank": 17, "Name": "Caleb Williams", "Pos": "QB", "Team": "CHI", "Tier": 3, "ProjPts": 330.0, "Bye": 7},
+    {"Rank": 18, "Name": "Justin Herbert", "Pos": "QB", "Team": "LAC", "Tier": 3, "ProjPts": 320.0, "Bye": 5},
+    {"Rank": 19, "Name": "Malik Nabers", "Pos": "WR", "Team": "NYG", "Tier": 4, "ProjPts": 295.0, "Bye": 11},
+    {"Rank": 20, "Name": "Brock Purdy", "Pos": "QB", "Team": "SF", "Tier": 4, "ProjPts": 310.0, "Bye": 9},
+    {"Rank": 21, "Name": "James Cook", "Pos": "RB", "Team": "BUF", "Tier": 4, "ProjPts": 280.0, "Bye": 12},
+    {"Rank": 22, "Name": "Derrick Henry", "Pos": "RB", "Team": "BAL", "Tier": 4, "ProjPts": 290.0, "Bye": 14},
+    {"Rank": 23, "Name": "Nico Collins", "Pos": "WR", "Team": "HOU", "Tier": 4, "ProjPts": 285.0, "Bye": 14},
+    {"Rank": 24, "Name": "Dak Prescott", "Pos": "QB", "Team": "DAL", "Tier": 4, "ProjPts": 305.0, "Bye": 7},
+    {"Rank": 25, "Name": "Brian Thomas Jr.", "Pos": "WR", "Team": "JAC", "Tier": 4, "ProjPts": 275.0, "Bye": 12},
+    {"Rank": 26, "Name": "Trevor Lawrence", "Pos": "QB", "Team": "JAC", "Tier": 4, "ProjPts": 295.0, "Bye": 12},
+    {"Rank": 27, "Name": "Jaxon Smith-Njigba", "Pos": "WR", "Team": "SEA", "Tier": 4, "ProjPts": 290.0, "Bye": 10},
+    {"Rank": 28, "Name": "Patrick Mahomes II", "Pos": "QB", "Team": "KC", "Tier": 4, "ProjPts": 315.0, "Bye": 6},
+    {"Rank": 29, "Name": "Jaxson Dart", "Pos": "QB", "Team": "NYG", "Tier": 5, "ProjPts": 285.0, "Bye": 11},
+    {"Rank": 30, "Name": "Brock Bowers", "Pos": "TE", "Team": "LV", "Tier": 5, "ProjPts": 250.0, "Bye": 10},
+    {"Rank": 31, "Name": "Trey McBride", "Pos": "TE", "Team": "ARI", "Tier": 5, "ProjPts": 240.0, "Bye": 11},
+    {"Rank": 32, "Name": "De'Von Achane", "Pos": "RB", "Team": "MIA", "Tier": 5, "ProjPts": 265.0, "Bye": 6},
+    {"Rank": 33, "Name": "Bucky Irving", "Pos": "RB", "Team": "TB", "Tier": 5, "ProjPts": 255.0, "Bye": 11},
+    {"Rank": 34, "Name": "Ashton Jeanty", "Pos": "RB", "Team": "LV", "Tier": 5, "ProjPts": 260.0, "Bye": 10},
+    {"Rank": 35, "Name": "Bo Nix", "Pos": "QB", "Team": "DEN", "Tier": 5, "ProjPts": 280.0, "Bye": 14},
+    {"Rank": 36, "Name": "Kyler Murray", "Pos": "QB", "Team": "MIN", "Tier": 5, "ProjPts": 295.0, "Bye": 6},
     {"Rank": 37, "Name": "Jordan Love", "Pos": "QB", "Team": "GB", "Tier": 5, "ProjPts": 290.0, "Bye": 10},
-    {"Rank": 38, "Name": "A.J. Brown", "Pos": "WR", "Team": "NE", "Tier": 5, "ProjPts": 265.0, "Bye": 11},
-    {"Rank": 39, "Name": "Drake London", "Pos": "WR", "Team": "ATL", "Tier": 5, "ProjPts": 255.0, "Bye": 12},
-    {"Rank": 40, "Name": "George Kittle", "Pos": "TE", "Team": "SF", "Tier": 6, "ProjPts": 200.0, "Bye": 9}
+    {"Rank": 38, "Name": "A.J. Brown", "Pos": "WR", "Team": "NE", "Tier": 5, "ProjPts": 275.0, "Bye": 11},
+    {"Rank": 39, "Name": "Drake London", "Pos": "WR", "Team": "ATL", "Tier": 5, "ProjPts": 265.0, "Bye": 12},
+    {"Rank": 40, "Name": "George Kittle", "Pos": "TE", "Team": "SF", "Tier": 6, "ProjPts": 210.0, "Bye": 9}
 ]
 
 # -----------------------------------------------------------------------------
@@ -110,15 +99,13 @@ if 'draft_history' not in st.session_state: st.session_state.draft_history = []
 if 'is_mock_mode' not in st.session_state: st.session_state.is_mock_mode = False
 
 # -----------------------------------------------------------------------------
-# 5. ADVANCED METRICS (VBD & SCORING MODIFIERS)
+# 5. ADVANCED METRICS (VBD & CUSTOM SCORING SCALING)
 # -----------------------------------------------------------------------------
 def calculate_vbd(df, te_premium=1.0):
     working_df = df.copy()
-    # Apply TE Premium multiplier if toggled
     working_df.loc[working_df['Pos'] == 'TE', 'ProjPts'] *= te_premium
     
     baselines = {}
-    # Baseline replacement levels (approximate starter thresholds for 12-team leagues)
     replacement_ranks = {'QB': 15, 'RB': 30, 'WR': 36, 'TE': 12}
     
     for pos, rank_idx in replacement_ranks.items():
@@ -134,18 +121,8 @@ def calculate_vbd(df, te_premium=1.0):
     return working_df
 
 # -----------------------------------------------------------------------------
-# 6. API HELPERS & AUTOMATION
+# 6. HELPERS & AUTOMATION
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=86400)
-def fetch_sleeper_players():
-    try:
-        res = requests.get("https://api.sleeper.app/v1/players/nfl", timeout=5)
-        if res.status_code == 200:
-            return {pid: f"{p.get('first_name', '')} {p.get('last_name', '')}".strip() for pid, p in res.json().items()}
-    except Exception:
-        pass
-    return {}
-
 def draft_player(player_index, team_num):
     st.session_state.players_df.loc[player_index, 'Drafted'] = True
     st.session_state.players_df.loc[player_index, 'Drafted_By'] = int(team_num)
@@ -170,15 +147,14 @@ def get_on_the_clock_team(pick_num, total_teams):
 # 7. SIDEBAR COMMAND CENTER & LEAGUE SETTINGS
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.title("⚙️ League Settings")
+    st.title("⚙️ Custom League Settings")
+    st.markdown("*(Adjusted for 4pt Pass TD, 0.5 1st Downs, & Volume Bonuses)*")
     st.session_state.num_teams = st.number_input("Number of Teams", 4, 20, int(st.session_state.num_teams))
     st.session_state.num_rounds = st.number_input("Number of Rounds", 1, 30, int(st.session_state.num_rounds))
     st.session_state.user_team_num = st.selectbox("Your Pick Position", list(range(1, st.session_state.num_teams + 1)))
     
     st.divider()
-    st.subheader("📊 Scoring Rules")
-    scoring_format = st.selectbox("Scoring System", ["Half-PPR (Default)", "Full PPR", "Standard"])
-    te_premium_val = st.slider("TE Premium Bonus (Rec Yards/TD)", 1.0, 2.0, 1.0, 0.5)
+    te_premium_val = st.slider("TE Premium Bonus Multiplier", 1.0, 2.0, 1.0, 0.5)
     
     st.divider()
     col_u1, col_u2 = st.columns(2)
@@ -195,7 +171,6 @@ with st.sidebar:
             st.session_state.draft_history = []
             st.rerun()
 
-# Apply VBD calculations dynamically
 st.session_state.players_df = calculate_vbd(st.session_state.players_df, te_premium=te_premium_val)
 
 # -----------------------------------------------------------------------------
@@ -205,18 +180,15 @@ current_pick = st.session_state.current_pick
 max_picks = st.session_state.num_teams * st.session_state.num_rounds
 
 if current_pick <= max_picks:
-    current_round = (current_pick - 1) // st.session_state.num_teams + 1
     on_the_clock = get_on_the_clock_team(current_pick, st.session_state.num_teams)
     is_user_turn = (on_the_clock == st.session_state.user_team_num)
 else:
     on_the_clock = None
     is_user_turn = False
 
-# Mock Draft AI Logic Automation Trigger
 if on_the_clock and on_the_clock != st.session_state.user_team_num and st.session_state.is_mock_mode:
     undrafted_pool = st.session_state.players_df[st.session_state.players_df['Drafted'] == False]
     if not undrafted_pool.empty:
-        # AI drafts best VBD available
         best_ai_pick = undrafted_pool.sort_values(by='VBD', ascending=False).index[0]
         draft_player(best_ai_pick, on_the_clock)
         st.rerun()
@@ -234,13 +206,12 @@ with col_m4:
 st.divider()
 
 # -----------------------------------------------------------------------------
-# 9. ADVANCED TABS INTERFACE
+# 9. TABS INTERFACE
 # -----------------------------------------------------------------------------
 tab_cheat, tab_board, tab_rosters, tab_trade = st.tabs([
     "📋 Cheat Sheet & VBD", "🗺️ Visual Draft Board", "🛡️ Rosters & Bye Tracker", "⚖️ In-Draft Trade Analyzer"
 ])
 
-# TAB 1: CHEAT SHEET & VBD
 with tab_cheat:
     col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
     with col_f1: search_query = st.text_input("🔍 Search Player", placeholder="Search name...").strip().lower()
@@ -272,7 +243,6 @@ with tab_cheat:
         elif row['Drafted']:
             c5.write(f"✅ Drafted Team {row['Drafted_By']}")
 
-# TAB 2: VISUAL DRAFT BOARD
 with tab_board:
     st.subheader("Full Draft Grid Board")
     drafted_df = st.session_state.players_df[st.session_state.players_df['Drafted'] == True]
@@ -283,7 +253,6 @@ with tab_board:
     else:
         st.info("No picks recorded yet.")
 
-# TAB 3: ROSTERS & BYE WEEKS
 with tab_rosters:
     st.subheader("Team Roster & Bye-Week Matrix")
     sel_team = st.selectbox("Select Team to Inspect", list(range(1, st.session_state.num_teams + 1)))
@@ -291,8 +260,6 @@ with tab_rosters:
     
     if not team_roster.empty:
         st.dataframe(team_roster[['Pick_Num', 'Name', 'Pos', 'Team', 'Bye', 'ProjPts']], hide_index=True, use_container_width=True)
-        
-        # Bye week stacking warning
         bye_counts = team_roster['Bye'].value_counts()
         heavy_byes = bye_counts[bye_counts >= 2]
         if not heavy_byes.empty:
@@ -301,7 +268,6 @@ with tab_rosters:
     else:
         st.info(f"Team {sel_team} has no rostered players.")
 
-# TAB 4: TRADE ANALYZER
 with tab_trade:
     st.subheader("In-Draft Pick & Player Trade Calculator")
     col_t1, col_t2 = st.columns(2)
