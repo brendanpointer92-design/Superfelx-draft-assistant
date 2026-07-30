@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -127,7 +126,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
     {"Rank": 63, "Name": "Devonta Smith", "Pos": "WR", "Team": "PHI", "Tier": 8},
     {"Rank": 64, "Name": "DK Metcalf", "Pos": "WR", "Team": "SEA", "Tier": 8},
-    {"Rank": 65, "Name": "Terry McLaurin", "Pos": "WAS", "Team": "WAS", "Tier": 8},
+    {"Rank": 65, "Name": "Terry McLaurin", "Pos": "WR", "Team": "WAS", "Tier": 8},
     {"Rank": 66, "Name": "Rhamondre Stevenson", "Pos": "RB", "Team": "NE", "Tier": 8},
     {"Rank": 67, "Name": "Chuba Hubbard", "Pos": "RB", "Team": "CAR", "Tier": 8},
     {"Rank": 68, "Name": "Anthony Richardson", "Pos": "QB", "Team": "IND", "Tier": 8},
@@ -377,4 +376,5 @@ with tab_cheat:
     if search_query:
         df = df[df['Name'].str.lower().str.contains(search_query) | df['Team'].str.lower().str.contains(search_query)]
 
-    st.write(f"Showing **{len(df)}** pl
+    # Cleaned line 380 f-string
+    st.w
