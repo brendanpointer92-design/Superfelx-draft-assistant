@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 
 # -----------------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & CUSTOM STYLING
@@ -8,10 +9,10 @@ st.set_page_config(
     page_title="2026 Fantasy Football Superflex Draft Board",
     page_icon="🏈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern UI, color-coded position badges, and draft board grid
+# Custom CSS with responsive grid and horizontal scroll support for mobile
 st.markdown("""
 <style>
     .stApp {
@@ -29,12 +30,13 @@ st.markdown("""
     .draft-card {
         border: 1px solid #30363d;
         border-radius: 6px;
-        padding: 6px;
-        margin-bottom: 6px;
-        font-size: 0.85rem;
+        padding: 4px;
+        margin-bottom: 4px;
+        font-size: 0.75rem;
         background-color: #161b22;
         text-align: center;
-        min-height: 52px;
+        min-height: 48px;
+        word-wrap: break-word;
     }
     .draft-card-qb { border-left: 4px solid #e63946; }
     .draft-card-rb { border-left: 4px solid #2a9d8f; }
@@ -45,7 +47,7 @@ st.markdown("""
     .draft-card-empty { border: 1px dashed #484f58; background-color: transparent; color: #6e7681; }
 
     div[data-testid="stMetricValue"] {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -170,7 +172,51 @@ DEFAULT_PLAYERS = [
 ROSTER_TARGETS = {'QB': 2, 'RB': 2, 'WR': 3, 'TE': 1}
 
 # -----------------------------------------------------------------------------
-# 3. SESSION STATE INITIALIZATION
+# 3. SLEEPER API HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
+@st.cache_data(ttl=86400)
+def fetch_sleeper_players():
+    url = "https://api.sleeper.app/v1/players/nfl"
+    response = requests.get(url)
+    if response.status_code == 200:
+        players = response.json()
+        return {
+            pid: {
+                "name": f"{p.get('first_name', '')} {p.get('last_name', '')}".strip(),
+                "position": p.get("position"),
+                "team": p.get("team")
+            }
+            for pid, p in players.items()
+        }
+    return {}
+
+def get_sleeper_user(username):
+    url = f"https://api.sleeper.app/v1/user/{username}"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else None
+
+def get_user_leagues(user_id, season="2026"):
+    url = f"https://api.sleeper.app/v1/user/{user_id}/leagues/nfl/{season}"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else []
+
+def get_league_drafts(league_id):
+    url = f"https://api.sleeper.app/v1/league/{league_id}/drafts"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else []
+
+def get_draft_details(draft_id):
+    url = f"https://api.sleeper.app/v1/draft/{draft_id}"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else None
+
+def get_draft_picks(draft_id):
+    url = f"https://api.sleeper.app/v1/draft/{draft_id}/picks"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else []
+
+# -----------------------------------------------------------------------------
+# 4. SESSION STATE INITIALIZATION
 # -----------------------------------------------------------------------------
 if 'players_df' not in st.session_state:
     df_init = pd.DataFrame(DEFAULT_PLAYERS)
@@ -195,7 +241,7 @@ if 'draft_history' not in st.session_state:
     st.session_state.draft_history = []
 
 # -----------------------------------------------------------------------------
-# 4. HELPER FUNCTIONS & SUGGESTION ENGINE
+# 5. DRAFT LOGIC HELPER FUNCTIONS
 # -----------------------------------------------------------------------------
 def get_on_the_clock_team(pick_num, total_teams):
     round_num = (pick_num - 1) // total_teams + 1
@@ -264,8 +310,57 @@ def get_player_suggestions(team_num, top_n=3):
     undrafted['Reason'] = reasons
     return undrafted.sort_values(by='Rec_Score', ascending=False).head(top_n)
 
+def sync_sleeper_draft(draft_id, user_id):
+    with st.spinner("Syncing Sleeper picks..."):
+        sleeper_players = fetch_sleeper_players()
+        draft_info = get_draft_details(draft_id)
+        
+        if draft_info:
+            st.session_state.num_teams = int(draft_info.get("settings", {}).get("teams", st.session_state.num_teams))
+            st.session_state.num_rounds = int(draft_info.get("settings", {}).get("rounds", st.session_state.num_rounds))
+            draft_order = draft_info.get("draft_order", {})
+            if user_id in draft_order:
+                st.session_state.user_team_num = int(draft_order[user_id])
+
+        picks = get_draft_picks(draft_id)
+        if not picks:
+            st.sidebar.info("No picks recorded yet in this draft.")
+            return
+
+        st.session_state.players_df['Drafted'] = False
+        st.session_state.players_df['Drafted_By'] = None
+        st.session_state.players_df['Pick_Num'] = None
+        st.session_state.draft_history = []
+        
+        synced_count = 0
+        for p in picks:
+            pid = p.get("player_id")
+            pick_no = p.get("pick_no")
+            draft_slot = p.get("draft_slot")
+            
+            player_data = sleeper_players.get(pid, {})
+            p_name = player_data.get("name", "").strip().lower()
+            
+            if not p_name:
+                continue
+
+            match = st.session_state.players_df[
+                st.session_state.players_df['Name'].str.lower() == p_name
+            ]
+            
+            if not match.empty:
+                idx = match.index[0]
+                st.session_state.players_df.loc[idx, 'Drafted'] = True
+                st.session_state.players_df.loc[idx, 'Drafted_By'] = int(draft_slot)
+                st.session_state.players_df.loc[idx, 'Pick_Num'] = int(pick_no)
+                st.session_state.draft_history.append((idx, pick_no))
+                synced_count += 1
+
+        st.session_state.current_pick = len(picks) + 1
+        st.sidebar.success(f"Successfully synced {synced_count} picks!")
+
 # -----------------------------------------------------------------------------
-# 5. SIDEBAR CONTROLS
+# 6. SIDEBAR CONTROLS & SLEEPER INTEGRATION
 # -----------------------------------------------------------------------------
 with st.sidebar:
     st.title("⚙️ League Settings")
@@ -274,7 +369,7 @@ with st.sidebar:
     st.session_state.user_team_num = st.selectbox(
         "Your Pick Position",
         options=list(range(1, st.session_state.num_teams + 1)),
-        index=st.session_state.user_team_num - 1
+        index=min(st.session_state.user_team_num - 1, st.session_state.num_teams - 1)
     )
     st.divider()
     
@@ -292,88 +387,16 @@ with st.sidebar:
             st.session_state.draft_history = []
             st.rerun()
 
-# -----------------------------------------------------------------------------
-# 6. DRAFT STATUS HEADER
-# -----------------------------------------------------------------------------
-current_pick = st.session_state.current_pick
-max_picks = st.session_state.num_teams * st.session_state.num_rounds
-
-if current_pick <= max_picks:
-    current_round = (current_pick - 1) // st.session_state.num_teams + 1
-    current_pick_in_round = (current_pick - 1) % st.session_state.num_teams + 1
-    on_the_clock = get_on_the_clock_team(current_pick, st.session_state.num_teams)
-    is_user_turn = (on_the_clock == st.session_state.user_team_num)
-else:
-    current_round = st.session_state.num_rounds
-    current_pick_in_round = st.session_state.num_teams
-    on_the_clock = None
-    is_user_turn = False
-
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-with col_m1:
-    st.metric("Overall Pick", f"#{current_pick}" if current_pick <= max_picks else "Complete")
-with col_m2:
-    st.metric("Round / Pick", f"R{current_round} . P{current_pick_in_round}")
-with col_m3:
-    clock_label = f"Team {on_the_clock}" if on_the_clock else "Ended"
-    if is_user_turn:
-        clock_label += " (YOU!) 🎉"
-    st.metric("On The Clock", clock_label)
-with col_m4:
-    user_qbs = len(st.session_state.players_df[
-        (st.session_state.players_df['Drafted_By'] == st.session_state.user_team_num) & 
-        (st.session_state.players_df['Pos'] == 'QB')
-    ])
-    st.metric("Your QBs", f"{user_qbs} Drafted")
-
-st.divider()
-
-# -----------------------------------------------------------------------------
-# 7. MAIN INTERFACE TABS
-# -----------------------------------------------------------------------------
-tab_cheat, tab_board, tab_rosters = st.tabs(["📋 Cheat Sheet & Quick Draft", "🗺️ Visual Draft Board", "🛡️ Team Rosters"])
-
-# -----------------------------------------------------------------------------
-# TAB 1: CHEAT SHEET & QUICK DRAFT
-# -----------------------------------------------------------------------------
-with tab_cheat:
-    if on_the_clock and current_pick <= max_picks:
-        user_turn_text = " *(YOUR TURN)*" if is_user_turn else ""
-        st.markdown(f"### 💡 Recommended Targets for **Team {on_the_clock}**{user_turn_text}")
-        suggestions = get_player_suggestions(on_the_clock, top_n=3)
-        
-        if not suggestions.empty:
-            s_cols = st.columns(len(suggestions))
-            for idx, (_, s_player) in enumerate(suggestions.iterrows()):
-                with s_cols[idx]:
-                    with st.container(border=True):
-                        st.markdown(f"<span class='badge-{s_player['Pos'].lower()}'>{s_player['Pos']}</span> **{s_player['Name']}** ({s_player['Team']})", unsafe_allow_html=True)
-                        st.caption(f"Rank #{s_player['Rank']} | Tier {s_player['Tier']}")
-                        st.markdown(f"<small style='color: #58a6ff;'>{s_player['Reason']}</small>", unsafe_allow_html=True)
-                        st.write("")
-                        
-                        btn_label = f"Draft to Team {on_the_clock}"
-                        if st.button(btn_label, key=f"rec_btn_{s_player['Rank']}", type="primary", use_container_width=True):
-                            p_idx = st.session_state.players_df[st.session_state.players_df['Rank'] == s_player['Rank']].index[0]
-                            draft_player(p_idx, on_the_clock)
-                            st.rerun()
-            st.divider()
-
-    # Filters
-    col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
-    with col_f1:
-        search_query = st.text_input("🔍 Search Player", placeholder="Search by name or team...").strip().lower()
-    with col_f2:
-        pos_filter = st.multiselect("Filter Position", options=['QB', 'RB', 'WR', 'TE', 'DST', 'K'], default=['QB', 'RB', 'WR', 'TE'])
-    with col_f3:
-        hide_drafted = st.checkbox("Hide Drafted", value=True)
-
-    # Safe DataFrame filtering and null checks
-    df = st.session_state.players_df.copy()
-    if hide_drafted:
-        df = df[df['Drafted'] == False]
-    if pos_filter:
-        df = df[df['Pos'].isin(pos_filter)]
-    if search_query:
-        name_match = df['Name'].fillna('').astype(str).str.lower().str.contains(search_query)
-        team_match 
+    st.divider()
+    st.subheader("🏈 Sleeper Live Sync")
+    
+    sleeper_user = st.text_input("Sleeper Username", placeholder="e.g. SleeperUser")
+    season_val = st.text_input("Season Year", value="2026")
+    
+    if sleeper_user:
+        user_info = get_sleeper_user(sleeper_user)
+        if user_info and "user_id" in user_info:
+            u_id = user_info["user_id"]
+            leagues = get_user_leagues(u_id, season_val)
+            
+           
