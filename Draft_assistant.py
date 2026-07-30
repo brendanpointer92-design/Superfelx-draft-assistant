@@ -24,9 +24,47 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State with Top 150 Superflex Data Pool
+# Initialize Session State for League Teams
+if "team_names" not in st.session_state:
+    st.session_state.team_names = [
+        "My Team", 
+        "Team 2", 
+        "Team 3", 
+        "Team 4", 
+        "Team 5", 
+        "Team 6", 
+        "Team 7", 
+        "Team 8", 
+        "Team 9", 
+        "Team 10"
+    ]
+
+if "team_rosters" not in st.session_state:
+    # Initialize roster dictionaries for each team
+    st.session_state.team_rosters = {
+        name: [
+            {"position": "QB", "player": None},
+            {"position": "QB", "player": None},
+            {"position": "RB", "player": None},
+            {"position": "RB", "player": None},
+            {"position": "WR", "player": None},
+            {"position": "WR", "player": None},
+            {"position": "TE", "player": None},
+            {"position": "S-FLX", "player": None},
+            {"position": "FLEX", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+        ] for name in st.session_state.team_names
+    }
+
+# Initialize Top 150 Player Pool
 if "players" not in st.session_state:
-    st.session_state.players = [
+    base_players = [
         {"id": 1, "name": "Josh Allen", "pos": "QB", "team": "BUF", "adp": 1.1, "proj": 363.0, "tier": 1, "bye": 7},
         {"id": 2, "name": "Lamar Jackson", "pos": "QB", "team": "BAL", "adp": 2.8, "proj": 328.0, "tier": 1, "bye": 13},
         {"id": 3, "name": "Drake Maye", "pos": "QB", "team": "NE", "adp": 3.2, "proj": 315.0, "tier": 1, "bye": 11},
@@ -82,9 +120,9 @@ if "players" not in st.session_state:
         {"id": 53, "name": "Josh Jacobs", "pos": "RB", "team": "GB", "adp": 54.0, "proj": 180.0, "tier": 5, "bye": 10},
         {"id": 54, "name": "Sam LaPorta", "pos": "TE", "team": "DET", "adp": 56.0, "proj": 160.0, "tier": 5, "bye": 6},
         {"id": 55, "name": "Mark Andrews", "pos": "TE", "team": "BAL", "adp": 58.0, "proj": 155.0, "tier": 5, "bye": 13},
-        # Filling out ranks 56 to 150 structurally to ensure full draft depth
         *[{"id": i, "name": f"Player {i}", "pos": "WR" if i % 3 == 0 else ("RB" if i % 3 == 1 else "QB"), "team": "FA", "adp": float(i), "proj": float(250 - i), "tier": (i // 25) + 1, "bye": 7} for i in range(56, 151)]
     ]
+    st.session_state.players = base_players
 
 if "drafted_log" not in st.session_state:
     st.session_state.drafted_log = []
@@ -92,36 +130,61 @@ if "drafted_log" not in st.session_state:
 if "watchlist" not in st.session_state:
     st.session_state.watchlist = []
 
-if "roster" not in st.session_state:
-    st.session_state.roster = [
-        {"position": "QB", "player": None},
-        {"position": "QB", "player": None},
-        {"position": "RB", "player": None},
-        {"position": "RB", "player": None},
-        {"position": "WR", "player": None},
-        {"position": "WR", "player": None},
-        {"position": "TE", "player": None},
-        {"position": "S-FLX", "player": None},
-        {"position": "FLEX", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-        {"position": "BN", "player": None},
-    ]
-
 if "current_pick" not in st.session_state:
     st.session_state.current_pick = 1
 
 current_round = (st.session_state.current_pick - 1) // 10 + 1
 
+# Helper function to execute a draft pick for a specific team
+def execute_draft(player, target_team):
+    # Remove from player pool & watchlist
+    st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
+    st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
+    
+    roster = st.session_state.team_rosters[target_team]
+    assigned = False
+    
+    # Roster assignment logic
+    if player["pos"] == "QB":
+        for s in roster:
+            if s["position"] == "QB" and not s["player"]:
+                s["player"] = player
+                assigned = True
+                break
+        if not assigned:
+            for s in roster:
+                if s["position"] == "S-FLX" and not s["player"]:
+                    s["player"] = player
+                    assigned = True
+                    break
+    else:
+        for s in roster:
+            if s["position"] == player["pos"] and not s["player"]:
+                s["player"] = player
+                assigned = True
+                break
+        if not assigned:
+            for s in roster:
+                if s["position"] in ["FLEX", "S-FLX"] and not s["player"]:
+                    s["player"] = player
+                    assigned = True
+                    break
+                    
+    # Fallback to Bench
+    if not assigned:
+        for s in roster:
+            if s["position"] == "BN" and not s["player"]:
+                s["player"] = player
+                break
+                
+    st.session_state.drafted_log.insert(0, {"pick": st.session_state.current_pick, "team": target_team, "player": player})
+    st.session_state.current_pick += 1
+
 # --- HEADER ---
 col_head1, col_head2, col_head3 = st.columns([3, 2, 1])
 with col_head1:
     st.title("⚡ SuperFlex Draft App")
-    st.caption("Top 150 Draft Sharks Superflex Rankings Edition")
+    st.caption("Customizable Team Rosters & Position Targeting")
 with col_head2:
     st.markdown(f"**Current Round / Pick:** Round {current_round} • Pick {st.session_state.current_pick}")
 with col_head3:
@@ -132,85 +195,55 @@ with col_head3:
 
 st.divider()
 
-# --- LAYOUT SETUP ---
-sidebar_col, main_col, ai_col = st.columns([3, 6, 3])
+# --- SIDEBAR: TEAM MANAGEMENT ---
+with st.sidebar:
+    st.header("⚙️ League Settings")
+    st.subheader("Edit Team Names")
+    
+    updated_names = []
+    for i, old_name in enumerate(st.session_state.team_names):
+        new_name = st.text_input(f"Team {i+1}", value=old_name, key=f"team_input_{i}")
+        updated_names.append(new_name)
+        
+    # Update team names in session state safely
+    if updated_names != st.session_state.team_names:
+        new_rosters = {}
+        for old, new in zip(st.session_state.team_names, updated_names):
+            new_rosters[new] = st.session_state.team_rosters.pop(old)
+        st.session_state.team_names = updated_names
+        st.session_state.team_rosters = new_rosters
 
-# --- LEFT COLUMN: ROSTER & QUEUE ---
-with sidebar_col:
-    st.subheader("🛡️ My Roster")
-    roster_container = st.container(height=340)
-    with roster_container:
-        for idx, slot in enumerate(st.session_state.roster):
+    st.divider()
+    st.subheader("🛡️ View Team Rosters")
+    selected_view_team = st.selectbox("Select Team to Inspect", st.session_state.team_names)
+    
+    view_container = st.container(height=300)
+    with view_container:
+        for slot in st.session_state.team_rosters[selected_view_team]:
             p_name = slot["player"]["name"] if slot["player"] else "Empty"
             p_team = f"({slot['player']['team']})" if slot["player"] else ""
             color = "#3b82f6" if slot["player"] else "#64748b"
             st.markdown(f"""
-                <div style="display: flex; justify-content: space-between; padding: 4px 8px; margin-bottom: 4px; background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; font-size: 12px;">
-                    <span style="font-weight: bold; color: #94a3b8; width: 40px;">{slot['position']}</span>
-                    <span style="color: {color}; flex-grow: 1; text-align: left; padding-left: 10px;">{p_name} {p_team}</span>
+                <div style="display: flex; justify-content: space-between; padding: 4px 6px; margin-bottom: 3px; background: #0f172a; border: 1px solid #1e293b; border-radius: 4px; font-size: 11px;">
+                    <span style="font-weight: bold; color: #94a3b8; width: 35px;">{slot['position']}</span>
+                    <span style="color: {color}; flex-grow: 1; text-align: left; padding-left: 8px;">{p_name} {p_team}</span>
                 </div>
             """, unsafe_allow_html=True)
 
-    st.subheader("⭐ Draft Queue")
-    queue_container = st.container(height=220)
-    with queue_container:
-        if not st.session_state.watchlist:
-            st.info("Click 'Star' on any player to add them to your queue.")
-        else:
-            for w_player in st.session_state.watchlist:
-                col_q1, col_q2 = st.columns([3, 1])
-                with col_q1:
-                    st.text(f"{w_player['pos']} - {w_player['name']}")
-                with col_q2:
-                    if st.button("Draft", key=f"q_{w_player['id']}"):
-                        player = w_player
-                        st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
-                        st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
-                        
-                        assigned = False
-                        if player["pos"] == "QB":
-                            for s in st.session_state.roster:
-                                if s["position"] == "QB" and not s["player"]:
-                                    s["player"] = player
-                                    assigned = True
-                                    break
-                            if not assigned:
-                                for s in st.session_state.roster:
-                                    if s["position"] == "S-FLX" and not s["player"]:
-                                        s["player"] = player
-                                        assigned = True
-                                        break
-                        else:
-                            for s in st.session_state.roster:
-                                if s["position"] == player["pos"] and not s["player"]:
-                                    s["player"] = player
-                                    assigned = True
-                                    break
-                            if not assigned:
-                                for s in st.session_state.roster:
-                                    if s["position"] in ["FLEX", "S-FLX"] and not s["player"]:
-                                        s["player"] = player
-                                        assigned = True
-                                        break
-                        if not assigned:
-                            for s in st.session_state.roster:
-                                if s["position"] == "BN" and not s["player"]:
-                                    s["player"] = player
-                                    break
-                        
-                        st.session_state.drafted_log.insert(0, {"pick": st.session_state.current_pick, "player": player})
-                        st.session_state.current_pick += 1
-                        st.rerun()
+# --- MAIN LAYOUT SETUP ---
+main_col, ai_col = st.columns([7, 3])
 
-# --- CENTER COLUMN: PLAYER POOL ---
+# --- CENTER COLUMN: PLAYER POOL & CONTROLS ---
 with main_col:
-    st.subheader("📋 Available Player Pool (Top 150 Pool)")
+    st.subheader("📋 Available Player Pool (Top 150)")
     
-    col_f1, col_f2 = st.columns([2, 2])
+    col_f1, col_f2, col_f3 = st.columns([2, 1.5, 1.5])
     with col_f1:
         search_query = st.text_input("Search Player", placeholder="Name or Team...")
     with col_f2:
         selected_pos = st.selectbox("Filter Position", ["ALL", "QB", "RB", "WR", "TE"])
+    with col_f3:
+        active_draft_team = st.selectbox("Draft Pick To Team:", st.session_state.team_names)
 
     filtered_players = st.session_state.players
     if selected_pos != "ALL":
@@ -218,7 +251,7 @@ with main_col:
     if search_query:
         filtered_players = [p for p in filtered_players if search_query.lower() in p["name"].lower() or search_query.lower() in p["team"].lower()]
 
-    pool_container = st.container(height=500)
+    pool_container = st.container(height=520)
     with pool_container:
         for player in filtered_players:
             c1, c2, c3, c4, c5, c6 = st.columns([2, 1, 1, 1, 1, 1])
@@ -244,42 +277,7 @@ with main_col:
                         st.rerun()
                 with col_act2:
                     if st.button("Draft", key=f"draft_{player['id']}"):
-                        st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
-                        st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
-                        
-                        assigned = False
-                        if player["pos"] == "QB":
-                            for s in st.session_state.roster:
-                                if s["position"] == "QB" and not s["player"]:
-                                    s["player"] = player
-                                    assigned = True
-                                    break
-                            if not assigned:
-                                for s in st.session_state.roster:
-                                    if s["position"] == "S-FLX" and not s["player"]:
-                                        s["player"] = player
-                                        assigned = True
-                                        break
-                        else:
-                            for s in st.session_state.roster:
-                                if s["position"] == player["pos"] and not s["player"]:
-                                    s["player"] = player
-                                    assigned = True
-                                    break
-                            if not assigned:
-                                for s in st.session_state.roster:
-                                    if s["position"] in ["FLEX", "S-FLX"] and not s["player"]:
-                                        s["player"] = player
-                                        assigned = True
-                                        break
-                        if not assigned:
-                            for s in st.session_state.roster:
-                                if s["position"] == "BN" and not s["player"]:
-                                    s["player"] = player
-                                    break
-                        
-                        st.session_state.drafted_log.insert(0, {"pick": st.session_state.current_pick, "player": player})
-                        st.session_state.current_pick += 1
+                        execute_draft(player, active_draft_team)
                         st.rerun()
             st.divider()
 
@@ -287,23 +285,26 @@ with main_col:
 with ai_col:
     st.subheader("🧠 SuperFlex AI Advisor")
     
-    qb_count = sum(1 for s in st.session_state.roster if s["position"] == "QB" and s["player"] is not None)
+    # Check roster status of the first team (default user team context)
+    user_roster = st.session_state.team_rosters[st.session_state.team_names[0]]
+    qb_count = sum(1 for s in user_roster if s["position"] == "QB" and s["player"] is not None)
     
     if qb_count == 0 and current_round <= 3:
-        advice = "Draft Sharks data emphasizes early quarterback value. Secure your tier-1 signal caller or elite dual-threat cornerstone now."
+        advice = f"[{st.session_state.team_names[0]}] Early quarterback optimization is vital in Superflex. Secure a tier-1 signal caller now."
     elif qb_count == 1 and current_round <= 6:
-        advice = "With one QB down, target your Superflex slot anchor before the tier drop-off at quarterback occurs."
+        advice = f"[{st.session_state.team_names[0]}] Lock down your second starter for the Superflex slot before the quarterback pool thins out."
     else:
-        advice = "Balance your roster by pulling high-value positional players while monitoring tier-based backups deep into the top 150 pool."
+        advice = "Target value drops across running back and wide receiver slots or secure high-upside backups."
         
     st.info(advice)
     
-    st.subheader("🕒 Recent Picks")
-    log_container = st.container(height=300)
+    st.subheader("🕒 Recent Draft Log")
+    log_container = st.container(height=330)
     with log_container:
         if not st.session_state.drafted_log:
             st.text("Draft picks will show here.")
         else:
             for log in st.session_state.drafted_log:
                 p = log["player"]
-                st.markdown(f"**Pick {log['pick']}**: {p['name']} ({p['pos']} - {p['team']})")
+                st.markdown(f"**P{log['pick']} ({log['team']})**: {p['name']} ({p['pos']})")
+            
