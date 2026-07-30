@@ -786,5 +786,3 @@ if auto_draft_enabled and not is_user_turn and current_pick <= 150:
 # --- TAB 1: DRAFT ROOM ---
 with tab_draft:
     st.subheader("Available Player Pool")
-
-    s
