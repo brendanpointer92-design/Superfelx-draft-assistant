@@ -42,6 +42,8 @@ st.markdown("""
     .draft-card-rb { border-left: 4px solid #2a9d8f; }
     .draft-card-wr { border-left: 4px solid #457b9d; }
     .draft-card-te { border-left: 4px solid #e9c46a; }
+    .draft-card-dst { border-left: 4px solid #6c757d; }
+    .draft-card-k { border-left: 4px solid #d62828; }
     .draft-card-empty { border: 1px dashed #484f58; background-color: transparent; color: #6e7681; }
 
     /* Custom Metric Styling */
@@ -52,13 +54,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 2. DEFAULT PLAYERS DATASET (2026 FantasyPros Superflex Consensus)
+# 2. DEFAULT PLAYERS DATASET (Top 100 - Superflex Standard Consensus)
 # -----------------------------------------------------------------------------
 DEFAULT_PLAYERS = [
+    # Tier 1
     {"Rank": 1, "Name": "Josh Allen", "Pos": "QB", "Team": "BUF", "Tier": 1},
     {"Rank": 2, "Name": "Lamar Jackson", "Pos": "QB", "Team": "BAL", "Tier": 1},
     {"Rank": 3, "Name": "Drake Maye", "Pos": "QB", "Team": "NE", "Tier": 1},
     {"Rank": 4, "Name": "Joe Burrow", "Pos": "QB", "Team": "CIN", "Tier": 1},
+    # Tier 2
     {"Rank": 5, "Name": "Jayden Daniels", "Pos": "QB", "Team": "WAS", "Tier": 2},
     {"Rank": 6, "Name": "Jalen Hurts", "Pos": "QB", "Team": "PHI", "Tier": 2},
     {"Rank": 7, "Name": "Jahmyr Gibbs", "Pos": "RB", "Team": "DET", "Tier": 2},
@@ -67,6 +71,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 10, "Name": "Caleb Williams", "Pos": "QB", "Team": "CHI", "Tier": 2},
     {"Rank": 11, "Name": "Justin Herbert", "Pos": "QB", "Team": "LAC", "Tier": 2},
     {"Rank": 12, "Name": "Puka Nacua", "Pos": "WR", "Team": "LAR", "Tier": 2},
+    # Tier 3
     {"Rank": 13, "Name": "Dak Prescott", "Pos": "QB", "Team": "DAL", "Tier": 3},
     {"Rank": 14, "Name": "Trevor Lawrence", "Pos": "QB", "Team": "JAC", "Tier": 3},
     {"Rank": 15, "Name": "Jaxon Smith-Njigba", "Pos": "WR", "Team": "SEA", "Tier": 3},
@@ -75,6 +80,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 18, "Name": "Brock Purdy", "Pos": "QB", "Team": "SF", "Tier": 3},
     {"Rank": 19, "Name": "Christian McCaffrey", "Pos": "RB", "Team": "SF", "Tier": 3},
     {"Rank": 20, "Name": "Jaxson Dart", "Pos": "QB", "Team": "NYG", "Tier": 3},
+    # Tier 4
     {"Rank": 21, "Name": "CeeDee Lamb", "Pos": "WR", "Team": "DAL", "Tier": 4},
     {"Rank": 22, "Name": "Justin Jefferson", "Pos": "WR", "Team": "MIN", "Tier": 4},
     {"Rank": 23, "Name": "Saquon Barkley", "Pos": "RB", "Team": "PHI", "Tier": 4},
@@ -84,6 +90,7 @@ DEFAULT_PLAYERS = [
     {"Rank": 27, "Name": "Nico Collins", "Pos": "WR", "Team": "HOU", "Tier": 4},
     {"Rank": 28, "Name": "Brian Thomas Jr.", "Pos": "WR", "Team": "JAC", "Tier": 4},
     {"Rank": 29, "Name": "Patrick Mahomes II", "Pos": "QB", "Team": "KC", "Tier": 4},
+    # Tier 5
     {"Rank": 30, "Name": "Brock Bowers", "Pos": "TE", "Team": "LV", "Tier": 5},
     {"Rank": 31, "Name": "Trey McBride", "Pos": "TE", "Team": "ARI", "Tier": 5},
     {"Rank": 32, "Name": "Bo Nix", "Pos": "QB", "Team": "DEN", "Tier": 5},
@@ -92,8 +99,9 @@ DEFAULT_PLAYERS = [
     {"Rank": 35, "Name": "De'Von Achane", "Pos": "RB", "Team": "MIA", "Tier": 5},
     {"Rank": 36, "Name": "Ashton Jeanty", "Pos": "RB", "Team": "LV", "Tier": 5},
     {"Rank": 37, "Name": "Jordan Love", "Pos": "QB", "Team": "GB", "Tier": 5},
-    {"Rank": 38, "Name": "A.J. Brown", "Pos": "WR", "Team": "PHI", "Tier": 5},
+    {"Rank": 38, "Name": "A.J. Brown", "Pos": "WR", "Team": "NE", "Tier": 5},
     {"Rank": 39, "Name": "Drake London", "Pos": "WR", "Team": "ATL", "Tier": 5},
+    # Tier 6
     {"Rank": 40, "Name": "George Kittle", "Pos": "TE", "Team": "SF", "Tier": 6},
     {"Rank": 41, "Name": "Josh Jacobs", "Pos": "RB", "Team": "GB", "Tier": 6},
     {"Rank": 42, "Name": "C.J. Stroud", "Pos": "QB", "Team": "HOU", "Tier": 6},
@@ -102,7 +110,64 @@ DEFAULT_PLAYERS = [
     {"Rank": 45, "Name": "Tee Higgins", "Pos": "WR", "Team": "CIN", "Tier": 6},
     {"Rank": 46, "Name": "Garrett Wilson", "Pos": "WR", "Team": "NYJ", "Tier": 6},
     {"Rank": 47, "Name": "Kyren Williams", "Pos": "RB", "Team": "LAR", "Tier": 6},
-    {"Rank": 48, "Name": "Kenneth Walker III", "Pos": "RB", "Team": "SEA", "Tier": 6}
+    {"Rank": 48, "Name": "Kenneth Walker III", "Pos": "RB", "Team": "KC", "Tier": 6},
+    {"Rank": 49, "Name": "Tua Tagovailoa", "Pos": "QB", "Team": "MIA", "Tier": 6},
+    {"Rank": 50, "Name": "Geno Smith", "Pos": "QB", "Team": "SEA", "Tier": 6},
+    # Tier 7
+    {"Rank": 51, "Name": "Rashee Rice", "Pos": "WR", "Team": "KC", "Tier": 7},
+    {"Rank": 52, "Name": "George Pickens", "Pos": "WR", "Team": "DAL", "Tier": 7},
+    {"Rank": 53, "Name": "Omarion Hampton", "Pos": "RB", "Team": "LAC", "Tier": 7},
+    {"Rank": 54, "Name": "Chase Brown", "Pos": "RB", "Team": "CIN", "Tier": 7},
+    {"Rank": 55, "Name": "Marvin Harrison Jr.", "Pos": "WR", "Team": "ARI", "Tier": 7},
+    {"Rank": 56, "Name": "Xavier Worthy", "Pos": "WR", "Team": "KC", "Tier": 7},
+    {"Rank": 57, "Name": "David Montgomery", "Pos": "RB", "Team": "DET", "Tier": 7},
+    {"Rank": 58, "Name": "Isiah Pacheco", "Pos": "RB", "Team": "KC", "Tier": 7},
+    {"Rank": 59, "Name": "Michael Penix Jr.", "Pos": "QB", "Team": "ATL", "Tier": 7},
+    {"Rank": 60, "Name": "Bryce Young", "Pos": "QB", "Team": "CAR", "Tier": 7},
+    # Tier 8
+    {"Rank": 61, "Name": "Colston Loveland", "Pos": "TE", "Team": "CHI", "Tier": 8},
+    {"Rank": 62, "Name": "Tucker Kraft", "Pos": "TE", "Team": "GB", "Tier": 8},
+    {"Rank": 63, "Name": "Devonta Smith", "Pos": "WR", "Team": "PHI", "Tier": 8},
+    {"Rank": 64, "Name": "DK Metcalf", "Pos": "WR", "Team": "SEA", "Tier": 8},
+    {"Rank": 65, "Name": "Terry McLaurin", "Pos": "WR", "Team": "WAS", "Tier": 8},
+    {"Rank": 66, "Name": "Rhamondre Stevenson", "Pos": "RB", "Team": "NE", "Tier": 8},
+    {"Rank": 67, "Name": "Chuba Hubbard", "Pos": "RB", "Team": "CAR", "Tier": 8},
+    {"Rank": 68, "Name": "Anthony Richardson", "Pos": "QB", "Team": "IND", "Tier": 8},
+    {"Rank": 69, "Name": "Deshaun Watson", "Pos": "QB", "Team": "CLE", "Tier": 8},
+    {"Rank": 70, "Name": "J.J. McCarthy", "Pos": "QB", "Team": "MIN", "Tier": 8},
+    # Tier 9
+    {"Rank": 71, "Name": "James Conner", "Pos": "RB", "Team": "ARI", "Tier": 9},
+    {"Rank": 72, "Name": "Tony Pollard", "Pos": "RB", "Team": "TEN", "Tier": 9},
+    {"Rank": 73, "Name": "Aaron Jones", "Pos": "RB", "Team": "MIN", "Tier": 9},
+    {"Rank": 74, "Name": "DJ Moore", "Pos": "WR", "Team": "CHI", "Tier": 9},
+    {"Rank": 75, "Name": "Jaylen Waddle", "Pos": "WR", "Team": "MIA", "Tier": 9},
+    {"Rank": 76, "Name": "Chris Olave", "Pos": "WR", "Team": "NO", "Tier": 9},
+    {"Rank": 77, "Name": "Zay Flowers", "Pos": "WR", "Team": "BAL", "Tier": 9},
+    {"Rank": 78, "Name": "Tyler Warren", "Pos": "TE", "Team": "IND", "Tier": 9},
+    {"Rank": 79, "Name": "Sam LaPorta", "Pos": "TE", "Team": "DET", "Tier": 9},
+    {"Rank": 80, "Name": "Matthew Stafford", "Pos": "QB", "Team": "LAR", "Tier": 9},
+    # Tier 10
+    {"Rank": 81, "Name": "Javonte Williams", "Pos": "RB", "Team": "DEN", "Tier": 10},
+    {"Rank": 82, "Name": "Rachaad White", "Pos": "RB", "Team": "TB", "Tier": 10},
+    {"Rank": 83, "Name": "D'Andre Swift", "Pos": "RB", "Team": "CHI", "Tier": 10},
+    {"Rank": 84, "Name": "Tank Dell", "Pos": "WR", "Team": "HOU", "Tier": 10},
+    {"Rank": 85, "Name": "Keon Coleman", "Pos": "WR", "Team": "BUF", "Tier": 10},
+    {"Rank": 86, "Name": "Rome Odunze", "Pos": "WR", "Team": "CHI", "Tier": 10},
+    {"Rank": 87, "Name": "Calvin Ridley", "Pos": "WR", "Team": "TEN", "Tier": 10},
+    {"Rank": 88, "Name": "Harold Fannin Jr.", "Pos": "TE", "Team": "CLE", "Tier": 10},
+    {"Rank": 89, "Name": "Kyle Pitts Sr.", "Pos": "TE", "Team": "ATL", "Tier": 10},
+    {"Rank": 90, "Name": "Aaron Rodgers", "Pos": "QB", "Team": "NYJ", "Tier": 10},
+    # Tier 11
+    {"Rank": 91, "Name": "Najee Harris", "Pos": "RB", "Team": "PIT", "Tier": 11},
+    {"Rank": 92, "Name": "Brian Robinson Jr.", "Pos": "RB", "Team": "WAS", "Tier": 11},
+    {"Rank": 93, "Name": "Zach Charbonnet", "Pos": "RB", "Team": "SEA", "Tier": 11},
+    {"Rank": 94, "Name": "Christian Kirk", "Pos": "WR", "Team": "JAC", "Tier": 11},
+    {"Rank": 95, "Name": "DeMario Douglas", "Pos": "WR", "Team": "NE", "Tier": 11},
+    {"Rank": 96, "Name": "Jerry Jeudy", "Pos": "WR", "Team": "CLE", "Tier": 11},
+    {"Rank": 97, "Name": "Dalton Kincaid", "Pos": "TE", "Team": "BUF", "Tier": 11},
+    {"Rank": 98, "Name": "Travis Kelce", "Pos": "TE", "Team": "KC", "Tier": 11},
+    {"Rank": 99, "Name": "Russell Wilson", "Pos": "QB", "Team": "PIT", "Tier": 11},
+    {"Rank": 100, "Name": "Will Levis", "Pos": "QB", "Team": "TEN", "Tier": 11},
 ]
 
 # -----------------------------------------------------------------------------
@@ -267,7 +332,7 @@ with tab_cheat:
     with col_f1:
         search_query = st.text_input("🔍 Search Player", placeholder="Search by name or team...").strip().lower()
     with col_f2:
-        pos_filter = st.multiselect("Filter Position", options=['QB', 'RB', 'WR', 'TE'], default=['QB', 'RB', 'WR', 'TE'])
+        pos_filter = st.multiselect("Filter Position", options=['QB', 'RB', 'WR', 'TE', 'DST', 'K'], default=['QB', 'RB', 'WR', 'TE'])
     with col_f3:
         hide_drafted = st.checkbox("Hide Drafted", value=True)
 
@@ -316,80 +381,4 @@ with tab_board:
     num_teams = st.session_state.num_teams
     num_rounds = st.session_state.num_rounds
     
-    # Create column headers
-    board_cols = st.columns(num_teams)
-    for t_idx, col in enumerate(board_cols, start=1):
-        team_title = f"Team {t_idx}"
-        if t_idx == st.session_state.user_team_num:
-            team_title += " (YOU)"
-        col.markdown(f"**{team_title}**")
-
-    # Render round by round
-    for r in range(1, num_rounds + 1):
-        st.markdown(f"*Round {r}*")
-        r_cols = st.columns(num_teams)
-        
-        for t in range(1, num_teams + 1):
-            # Calculate overall pick number for Round r, Team t
-            if r % 2 == 1: # Odd round (1 -> N)
-                p_num = (r - 1) * num_teams + t
-            else: # Even round (N -> 1)
-                p_num = (r - 1) * num_teams + (num_teams - t + 1)
-            
-            # Check if pick has been made
-            picked_player = st.session_state.players_df[st.session_state.players_df['Pick_Num'] == p_num]
-            
-            with r_cols[t-1]:
-                if not picked_player.empty:
-                    player_data = picked_player.iloc[0]
-                    p_name = player_data['Name']
-                    p_pos = player_data['Pos']
-                    p_team = player_data['Team']
-                    pos_class = f"draft-card-{p_pos.lower()}"
-                    
-                    st.markdown(
-                        f"""<div class="draft-card {pos_class}">
-                            <b>{p_name}</b><br/>
-                            <small>{p_pos} - {p_team} (#{p_num})</small>
-                        </div>""", 
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"""<div class="draft-card draft-card-empty">
-                            <small>#{p_num}</small>
-                        </div>""", 
-                        unsafe_allow_html=True
-                    )
-
-# -----------------------------------------------------------------------------
-# TAB 3: TEAM ROSTERS & BREAKDOWN
-# -----------------------------------------------------------------------------
-with tab_rosters:
-    st.subheader("Team Rosters & Roster Breakdown")
-    
-    selected_team = st.selectbox(
-        "Select Team to View Roster",
-        options=[f"Team {i}" for i in range(1, st.session_state.num_teams + 1)]
-    )
-    
-    roster_df = st.session_state.players_df[st.session_state.players_df['Drafted_By'] == selected_team]
-    
-    col_r1, col_r2 = st.columns([3, 2])
-    
-    with col_r1:
-        st.write(f"### Roster: {selected_team}")
-        if not roster_df.empty:
-            display_roster = roster_df[['Pick_Num', 'Name', 'Pos', 'Team', 'Tier']].sort_values('Pick_Num')
-            st.dataframe(display_roster, hide_index=True, use_container_width=True)
-        else:
-            st.info("No players drafted yet for this team.")
-            
-    with col_r2:
-        st.write("### Positional Counts")
-        if not roster_df.empty:
-            pos_counts = roster_df['Pos'].value_counts()
-            st.bar_chart(pos_counts)
-        else:
-            st.info("No position data to display.")
-            
+    # Creat
