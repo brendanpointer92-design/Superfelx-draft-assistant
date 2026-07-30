@@ -204,7 +204,6 @@ st.markdown("Live 150-Player Board optimized for competitive Superflex formats."
 df = st.session_state['players_df']
 
 # Simple VBD Calculation Baseline
-# Baseline replacement scores (approximate baseline for top 10-team leagues)
 baselines = {'QB': 180.0, 'RB': 120.0, 'WR': 130.0, 'TE': 100.0}
 df['VBD'] = df.apply(lambda row: max(0.0, row['ProjPts'] - baselines.get(row['Pos'], 100.0)), axis=1)
 
@@ -219,7 +218,6 @@ tab1, tab2, tab3 = st.tabs(["📋 Draft Board", "👤 My Roster", "📊 Tier Bre
 with tab1:
     st.subheader("Available Player Rankings (Top 150)")
     
-    # Display table with interactive selection
     available_players = filtered_df[~filtered_df['Drafted']]
     
     col_left, col_right = st.columns([3, 1])
@@ -235,4 +233,7 @@ with tab1:
         st.markdown("### Draft Player")
         player_to_draft = st.selectbox("Select Player to Draft", available_players['Name'].tolist())
         
-        col_btn1, col_btn2 = st.columns
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("Draft to Me"):
+                idx = st.session_state['players_df'][st.
