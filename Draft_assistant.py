@@ -4,39 +4,64 @@ import random
 
 # Page Configuration
 st.set_page_config(
-    page_title="SuperFlex Mock Draft Companion",
+    page_title="SuperFlex Draft Companion // FF Draft App",
     page_icon="⚡",
     layout="wide"
 )
 
-# Custom Styling
+# Custom Styling to match dark mode aesthetics
 st.markdown("""
     <style>
     .stApp {
         background-color: #030712;
         color: #f3f4f6;
     }
+    .metric-card {
+        background-color: #0f172a;
+        border: 1px solid #1e293b;
+        padding: 15px;
+        border-radius: 12px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State for League Teams
+# Initialize Session State for League Teams & Draft Slot
 if "team_names" not in st.session_state:
     st.session_state.team_names = [
-        "My Team", "Team 2", "Team 3", "Team 4", "Team 5", 
-        "Team 6", "Team 7", "Team 8", "Team 9", "Team 10"
+        "My Team", 
+        "Team 2", 
+        "Team 3", 
+        "Team 4", 
+        "Team 5", 
+        "Team 6", 
+        "Team 7", 
+        "Team 8", 
+        "Team 9", 
+        "Team 10"
     ]
+
+if "user_draft_slot" not in st.session_state:
+    st.session_state.user_draft_slot = 1  # 1-indexed draft position for "My Team"
 
 if "team_rosters" not in st.session_state:
     st.session_state.team_rosters = {
         name: [
-            {"position": "QB", "player": None}, {"position": "QB", "player": None},
-            {"position": "RB", "player": None}, {"position": "RB", "player": None},
-            {"position": "WR", "player": None}, {"position": "WR", "player": None},
-            {"position": "TE", "player": None}, {"position": "S-FLX", "player": None},
-            {"position": "FLEX", "player": None}, {"position": "BN", "player": None},
-            {"position": "BN", "player": None}, {"position": "BN", "player": None},
-            {"position": "BN", "player": None}, {"position": "BN", "player": None},
-            {"position": "BN", "player": None}, {"position": "BN", "player": None},
+            {"position": "QB", "player": None},
+            {"position": "QB", "player": None},
+            {"position": "RB", "player": None},
+            {"position": "RB", "player": None},
+            {"position": "WR", "player": None},
+            {"position": "WR", "player": None},
+            {"position": "TE", "player": None},
+            {"position": "S-FLX", "player": None},
+            {"position": "FLEX", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
+            {"position": "BN", "player": None},
         ] for name in st.session_state.team_names
     }
 
@@ -94,7 +119,7 @@ if "players" not in st.session_state:
         {"id": 49, "name": "Zay Flowers", "pos": "WR", "team": "BAL", "adp": 50.8, "proj": 134.0, "tier": 5, "bye": 13},
         {"id": 50, "name": "Tetairoa McMillan", "pos": "WR", "team": "CAR", "adp": 51.2, "proj": 130.0, "tier": 5, "bye": 11},
         {"id": 51, "name": "Jeremiyah Love", "pos": "RB", "team": "ARI", "adp": 52.0, "proj": 175.0, "tier": 5, "bye": 11},
-        {"id": 52, "name": "KyrenWilliams", "pos": "RB", "team": "LAR", "adp": 52.9, "proj": 185.0, "tier": 5, "bye": 11},
+        {"id": 52, "name": "Kyren Williams", "pos": "RB", "team": "LAR", "adp": 52.9, "proj": 185.0, "tier": 5, "bye": 11},
         {"id": 53, "name": "Josh Jacobs", "pos": "RB", "team": "GB", "adp": 54.0, "proj": 180.0, "tier": 5, "bye": 10},
         {"id": 54, "name": "Sam LaPorta", "pos": "TE", "team": "DET", "adp": 56.0, "proj": 160.0, "tier": 5, "bye": 6},
         {"id": 55, "name": "Mark Andrews", "pos": "TE", "team": "BAL", "adp": 58.0, "proj": 155.0, "tier": 5, "bye": 13},
@@ -111,17 +136,28 @@ if "watchlist" not in st.session_state:
 if "current_pick" not in st.session_state:
     st.session_state.current_pick = 1
 
-# --- HELPER: CALCULATE SNAKE DRAFT TEAM FOR A GIVEN PICK ---
-def get_team_for_pick(pick_num, num_teams=10):
-    zero_indexed_pick = pick_num - 1
-    round_num = zero_indexed_pick // num_teams
-    pos_in_round = zero_indexed_pick % num_teams
-    if round_num % 2 == 0:
-        return pos_in_round # Normal order (0 to 9)
+# Helper function to compute snake draft order for a given overall pick number (1-indexed)
+def get_team_for_pick(pick_num, user_slot, team_names):
+    num_teams = len(team_names)
+    round_num = (pick_num - 1) // num_teams + 1
+    position_in_round = (pick_num - 1) % num_teams
+    
+    if round_num % 2 == 1:
+        # Odd round: 1 to N
+        # user_slot 1 maps to index 0
+        idx = (user_slot - 1) + position_in_round
     else:
-        return num_teams - 1 - pos_in_round # Reversed snake order (9 to 0)
+        # Even round: N down to 1 (snake reverse)
+        idx = (user_slot - 1) + (num_teams - 1 - position_in_round)
+        
+    # Wrap around safely if bounds shift, though standard mapping follows absolute slots
+    actual_team_index = idx % num_teams
+    return team_names[actual_team_index]
 
-# --- EXECUTE DRAFT PICK LOGIC ---
+current_round = (st.session_state.current_pick - 1) // len(st.session_state.team_names) + 1
+active_on_the_clock = get_team_for_pick(st.session_state.current_pick, st.session_state.user_draft_slot, st.session_state.team_names)
+
+# Helper function to execute a draft pick for a specific team
 def execute_draft(player, target_team):
     st.session_state.players = [p for p in st.session_state.players if p["id"] != player["id"]]
     st.session_state.watchlist = [p for p in st.session_state.watchlist if p["id"] != player["id"]]
@@ -163,15 +199,61 @@ def execute_draft(player, target_team):
     st.session_state.drafted_log.insert(0, {"pick": st.session_state.current_pick, "team": target_team, "player": player})
     st.session_state.current_pick += 1
 
-# --- SIDEBAR: LEAGUE & MOCK SETUP ---
+# AI / Auto-Draft Logic for CPU Teams
+def run_auto_pick():
+    if not st.session_state.players:
+        return
+    current_team = get_team_for_pick(st.session_state.current_pick, st.session_state.user_draft_slot, st.session_state.team_names)
+    
+    # Simple intelligent heuristic: CPU looks for highest projection, slightly prioritizing needs if critical
+    # For simplicity and speed, pick top available player by projection
+    best_player = max(st.session_state.players, key=lambda x: x["proj"])
+    execute_dir = best_player
+    execute_draft(execute_dir, current_team)
+
+# --- HEADER ---
+col_head1, col_head2, col_head3 = st.columns([3, 2, 1])
+with col_head1:
+    st.title("⚡ SuperFlex Draft App")
+    st.caption("Snake Draft Slot Management & Automated AI Simulation")
+with col_head2:
+    st.markdown(f"**Round {current_round} • Pick {st.session_state.current_pick}**<br>🟢 On The Clock: **{active_on_the_clock}**", unsafe_allow_html=True)
+with col_head3:
+    if st.button("🔄 Reset Draft", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+st.divider()
+
+# --- SIDEBAR: TEAM MANAGEMENT & DRAFT SETTINGS ---
 with st.sidebar:
-    st.header("⚙️ Mock Draft Setup")
+    st.header("⚙️ League Settings")
     
-    # User's slot configuration
-    user_slot = st.selectbox("Your Draft Position (Slot)", list(range(1, 11)), index=0)
-    user_team_name_mapping = st.session_state.team_names[user_slot - 1]
-    st.markdown(f"You are managing: **{user_team_name_mapping}**")
+    # Draft Slot Selection
+    st.subheader("🎯 My Draft Slot")
+    new_slot = st.number_input("Choose Draft Position", min_value=1, max_value=len(st.session_state.team_names), value=st.session_state.user_draft_slot, step=1)
+    if new_slot != st.session_state.user_draft_slot:
+        st.session_state.user_draft_slot = new_slot
+        st.rerun()
+        
+    st.caption(f"Your team ('{st.session_state.team_names[st.session_state.user_draft_slot - 1]}') picks according to snake order.")
     
+    st.divider()
+    st.subheader("🤖 Auto-Draft Control")
+    if active_on_the_clock != st.session_state.team_names[st.session_state.user_draft_slot - 1]:
+        if st.button("Simulate AI Pick (On Clock)", use_container_width=True):
+            run_auto_pick()
+            st.rerun()
+        if st.button("Simulate Rest of Round", use_container_width=True):
+            target_round = current_round
+            while current_round == target_round and st.session_state.players:
+                run_auto_pick()
+                current_round = (st.session_state.current_pick - 1) // len(st.session_state.team_names) + 1
+            st.rerun()
+    else:
+        st.info("You are currently on the clock! Make your manual selection from the player pool or use the dropdown.")
+
     st.divider()
     st.subheader("Edit Team Names")
     updated_names = []
@@ -187,8 +269,8 @@ with st.sidebar:
         st.session_state.team_rosters = new_rosters
 
     st.divider()
-    st.subheader("🛡️ View Rosters")
-    selected_view_team = st.selectbox("Inspect Team", st.session_state.team_names)
+    st.subheader("🛡️ View Team Rosters")
+    selected_view_team = st.selectbox("Select Team to Inspect", st.session_state.team_names)
     
     view_container = st.container(height=250)
     with view_container:
@@ -197,66 +279,18 @@ with st.sidebar:
             p_team = f"({slot['player']['team']})" if slot["player"] else ""
             color = "#3b82f6" if slot["player"] else "#64748b"
             st.markdown(f"""
-                <div style="display: flex; justify-content: space-between; padding: 3px 6px; margin-bottom: 2px; background: #0f172a; border: 1px solid #1e293b; border-radius: 4px; font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; padding: 4px 6px; margin-bottom: 3px; background: #0f172a; border: 1px solid #1e293b; border-radius: 4px; font-size: 11px;">
                     <span style="font-weight: bold; color: #94a3b8; width: 35px;">{slot['position']}</span>
                     <span style="color: {color}; flex-grow: 1; text-align: left; padding-left: 8px;">{p_name} {p_team}</span>
                 </div>
             """, unsafe_allow_html=True)
 
-# --- DETERMINE WHOSE TURN IT IS ---
-total_teams = len(st.session_state.team_names)
-current_round = (st.session_state.current_pick - 1) // total_teams + 1
-active_pick_team_index = get_team_for_pick(st.session_state.current_pick, total_teams)
-active_pick_team_name = st.session_state.team_names[active_pick_team_index]
+# --- MAIN LAYOUT SETUP ---
+main_col, ai_col = st.columns([7, 3])
 
-is_user_turn = (active_pick_team_index == (user_slot - 1))
-
-# --- HEADER SECTION ---
-col_head1, col_head2, col_head3 = st.columns([3, 2, 1])
-with col_head1:
-    st.title("⚡ SuperFlex Mock Draft")
-    st.markdown(f"On the clock: **{active_pick_team_name}** {'⭐ (YOUR TURN)' if is_user_turn else '(CPU)'}")
-with col_head2:
-    st.markdown(f"**Round {current_round} • Pick {st.session_state.current_pick}**")
-with col_head3:
-    if st.button("🔄 Reset Draft", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-
-# --- AUTO-DRAFT / SIMULATION CONTROLS ---
-if not is_user_turn and st.session_state.players:
-    st.markdown(f"""
-        <div style="background-color: #1e293b; padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <span>🤖 Automated Mock Draft Mode: <b>{active_pick_team_name}</b> is picking next.</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col_sim1, col_sim2 = st.columns([1, 4])
-    with col_sim1:
-        if st.button("Simulate Pick", type="primary", use_container_width=True):
-            # Pick best available based on projections
-            best_player = max(st.session_state.players, key=lambda x: x["proj"])
-            execute_draft(best_player, active_pick_team_name)
-            st.rerun()
-    with col_sim2:
-        if st.button("Simulate Until My Turn", use_container_width=True):
-            while st.session_state.players:
-                curr_idx = get_team_for_pick(st.session_state.current_pick, total_teams)
-                curr_team = st.session_state.team_names[curr_idx]
-                if curr_idx == (user_slot - 1):
-                    break # Stop when it hits user turn
-                best_player = max(st.session_state.players, key=lambda x: x["proj"])
-                execute_draft(best_player, curr_team)
-            st.rerun()
-
-st.divider()
-
-# --- MAIN LAYOUT ---
-main_col, side_col = st.columns([7, 3])
-
+# --- CENTER COLUMN: PLAYER POOL & CONTROLS ---
 with main_col:
-    st.subheader("📋 Available Player Pool")
+    st.subheader("📋 Available Player Pool (Top 150)")
     
     col_f1, col_f2, col_f3 = st.columns([2, 1.5, 1.5])
     with col_f1:
@@ -264,9 +298,8 @@ with main_col:
     with col_f2:
         selected_pos = st.selectbox("Filter Position", ["ALL", "QB", "RB", "WR", "TE"])
     with col_f3:
-        # Defaults dropdown selection to the team whose turn it is
-        default_team_idx = active_pick_team_index if not is_user_turn else (user_slot - 1)
-        override_team = st.selectbox("Draft Pick To Team:", st.session_state.team_names, index=default_team_idx)
+        # Default draft target matches whoever is currently on the clock
+        active_draft_team = st.selectbox("Draft Pick To Team:", st.session_state.team_names, index=st.session_state.team_names.index(active_on_the_clock) if active_on_the_clock in st.session_state.team_names else 0)
 
     filtered_players = st.session_state.players
     if selected_pos != "ALL":
@@ -274,7 +307,7 @@ with main_col:
     if search_query:
         filtered_players = [p for p in filtered_players if search_query.lower() in p["name"].lower() or search_query.lower() in p["team"].lower()]
 
-    pool_container = st.container(height=500)
+    pool_container = st.container(height=520)
     with pool_container:
         for player in filtered_players:
             c1, c2, c3, c4, c5, c6 = st.columns([2, 1, 1, 1, 1, 1])
@@ -300,18 +333,34 @@ with main_col:
                         st.rerun()
                 with col_act2:
                     if st.button("Draft", key=f"draft_{player['id']}"):
-                        execute_draft(player, override_team)
+                        execute_draft(player, active_draft_team)
                         st.rerun()
             st.divider()
 
-with side_col:
-    st.subheader("🕒 Recent Mock Draft Log")
-    log_container = st.container(height=520)
+# --- RIGHT COLUMN: AI ADVISOR & DRAFT LOG ---
+with ai_col:
+    st.subheader("🧠 SuperFlex AI Advisor")
+    
+    my_team_name = st.session_state.team_names[st.session_state.user_draft_slot - 1]
+    user_roster = st.session_state.team_rosters[my_team_name]
+    qb_count = sum(1 for s in user_roster if s["position"] == "QB" and s["player"] is not None)
+    
+    if qb_count == 0 and current_round <= 3:
+        advice = f"[{my_team_name}] Early quarterback optimization is vital in Superflex. Secure a tier-1 signal caller now."
+    elif qb_count == 1 and current_round <= 6:
+        advice = f"[{my_team_name}] Lock down your second starter for the Superflex slot before the quarterback pool thins out."
+    else:
+        advice = f"[{my_team_name}] Target value drops across running back and wide receiver slots or secure high-upside backups."
+        
+    st.info(advice)
+    
+    st.subheader("🕒 Recent Draft Log")
+    log_container = st.container(height=330)
     with log_container:
         if not st.session_state.drafted_log:
-            st.text("Draft selections will appear here.")
+            st.text("Draft picks will show here.")
         else:
             for log in st.session_state.drafted_log:
                 p = log["player"]
-                st.markdown(f"**P{log['pick']} ({log['team']})**: {p['name']} (`{p['pos']}`)")
+                st.markdown(f"**P{log['pick']} ({log['team']})**: {p['name']} ({p['pos']})")
                 
