@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import random
-import time
 
 # Page Configuration
 st.set_page_config(
@@ -137,9 +136,6 @@ if "watchlist" not in st.session_state:
 if "current_pick" not in st.session_state:
     st.session_state.current_pick = 1
 
-if "auto_draft_enabled" not in st.session_state:
-    st.session_state.auto_draft_enabled = False
-
 # Helper function to compute snake draft order for a given overall pick number (1-indexed)
 def get_team_for_pick(pick_num, user_slot, team_names):
     num_teams = len(team_names)
@@ -147,15 +143,16 @@ def get_team_for_pick(pick_num, user_slot, team_names):
     position_in_round = (pick_num - 1) % num_teams
     
     if round_num % 2 == 1:
+        # Odd round: 1 to N
         idx = (user_slot - 1) + position_in_round
     else:
+        # Even round: N down to 1 (snake reverse)
         idx = (user_slot - 1) + (num_teams - 1 - position_in_round)
         
     actual_team_index = idx % num_teams
     return team_names[actual_team_index]
 
 current_round = (st.session_state.current_pick - 1) // len(st.session_state.team_names) + 1
-my_team_name = st.session_state.team_names[st.session_state.user_draft_slot - 1]
 active_on_the_clock = get_team_for_pick(st.session_state.current_pick, st.session_state.user_draft_slot, st.session_state.team_names)
 
 # Helper function to execute a draft pick for a specific team
@@ -200,7 +197,7 @@ def execute_draft(player, target_team):
     st.session_state.drafted_log.insert(0, {"pick": st.session_state.current_pick, "team": target_team, "player": player})
     st.session_state.current_pick += 1
 
-# AI / Auto-Draft Logic for CPU Teams or User (if auto-draft on)
+# AI / Auto-Draft Logic for CPU Teams
 def run_auto_pick():
     if not st.session_state.players:
         return
@@ -234,20 +231,12 @@ with st.sidebar:
         st.session_state.user_draft_slot = new_slot
         st.rerun()
         
-    st.caption(f"Your team ('{my_team_name}') picks according to snake order.")
+    st.caption(f"Your team ('{st.session_state.team_names[st.session_state.user_draft_slot - 1]}') picks according to snake order.")
     
     st.divider()
-    st.subheader("🤖 Auto-Draft Settings")
-    
-    # Toggle for Auto-Draft ON/OFF
-    st.session_state.auto_draft_enabled = st.toggle("Enable Auto-Draft", value=st.session_state.auto_draft_enabled)
-    if st.session_state.auto_draft_enabled:
-        st.success("Auto-draft is active. The simulator will automatically pick for all teams.")
-    else:
-        st.info("Auto-draft is off. You must manually draft when it's your turn.")
-
-    if active_on_the_clock != my_team_name or not st.session_state.auto_draft_enabled:
-        if st.button("Simulate Next Pick", use_container_width=True):
+    st.subheader("🤖 Auto-Draft Control")
+    if active_on_the_clock != st.session_state.team_names[st.session_state.user_draft_slot - 1]:
+        if st.button("Simulate AI Pick (On Clock)", use_container_width=True):
             run_auto_pick()
             st.rerun()
         if st.button("Simulate Rest of Round", use_container_width=True):
@@ -256,6 +245,8 @@ with st.sidebar:
                 run_auto_pick()
                 current_round = (st.session_state.current_pick - 1) // len(st.session_state.team_names) + 1
             st.rerun()
+    else:
+        st.info("You are currently on the clock! Make your manual selection from the player pool or use the dropdown.")
 
     st.divider()
     st.subheader("Edit Team Names")
@@ -287,13 +278,6 @@ with st.sidebar:
                     <span style="color: {color}; flex-grow: 1; text-align: left; padding-left: 8px;">{p_name} {p_team}</span>
                 </div>
             """, unsafe_allow_html=True)
-
-# --- AUTO-DRAFT CONTINUOUS EXECUTION LOOP IF TURNED ON ---
-if st.session_state.auto_draft_enabled and st.session_state.players:
-    # If auto-draft is on for CPU OR if it's user turn and auto-draft is enabled globally
-    run_auto_pick()
-    time.sleep(0.3)
-    st.rerun()
 
 # --- MAIN LAYOUT SETUP ---
 main_col, ai_col = st.columns([7, 3])
@@ -350,6 +334,7 @@ with main_col:
 with ai_col:
     st.subheader("🧠 SuperFlex AI Advisor")
     
+    my_team_name = st.session_state.team_names[st.session_state.user_draft_slot - 1]
     user_roster = st.session_state.team_rosters[my_team_name]
     qb_count = sum(1 for s in user_roster if s["position"] == "QB" and s["player"] is not None)
     
@@ -371,3 +356,4 @@ with ai_col:
             for log in st.session_state.drafted_log:
                 p = log["player"]
                 st.markdown(f"**P{log['pick']} ({log['team']})**: {p['name']} ({p['pos']})")
+         
